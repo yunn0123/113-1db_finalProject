@@ -22,4 +22,5 @@
 ## 執行
 運行以下命令來啟動node.js：
 ```sh
+    npm run dev
 ```
