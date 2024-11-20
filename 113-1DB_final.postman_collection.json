@@ -1,0 +1,1273 @@
+{
+	"info": {
+		"_postman_id": "4e7b29ba-ad8b-4eee-9724-3489894edb11",
+		"name": "113-1DB_final",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29931742"
+	},
+	"item": [
+		{
+			"name": "bookLoan/AVLoan",
+			"item": [
+				{
+					"name": "getBookLoansByUser",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/getBookLoansByUser?u_id=B08101101",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"getBookLoansByUser"
+							],
+							"query": [
+								{
+									"key": "u_id",
+									"value": "B08101101"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getAVLoansByUser",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/getAVLoansByUser?u_id=B08101101",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"getAVLoansByUser"
+							],
+							"query": [
+								{
+									"key": "u_id",
+									"value": "B08101101"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "returnBook",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/returnBook?book_id&u_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"returnBook"
+							],
+							"query": [
+								{
+									"key": "book_id",
+									"value": null
+								},
+								{
+									"key": "u_id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "returnAV",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/returnAV?av_id&u_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"returnAV"
+							],
+							"query": [
+								{
+									"key": "av_id",
+									"value": null
+								},
+								{
+									"key": "u_id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updateOverdueBookLoan",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/updateOverdueBookLoan",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"updateOverdueBookLoan"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updateOverdueAVLoan",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/updateOverdueAVLoan",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"updateOverdueAVLoan"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ratingBook",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/ratingBook?rating&book_id&u_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"ratingBook"
+							],
+							"query": [
+								{
+									"key": "rating",
+									"value": null
+								},
+								{
+									"key": "book_id",
+									"value": null
+								},
+								{
+									"key": "u_id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ratingAV",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/returnAV?rating&av_id&u_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"returnAV"
+							],
+							"query": [
+								{
+									"key": "rating",
+									"value": null
+								},
+								{
+									"key": "av_id",
+									"value": null
+								},
+								{
+									"key": "u_id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getBookByTime",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/getBookByTime?start=2022-01-01&end=2024-01-01",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"getBookByTime"
+							],
+							"query": [
+								{
+									"key": "start",
+									"value": "2022-01-01"
+								},
+								{
+									"key": "end",
+									"value": "2024-01-01"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getAVByTime",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/getAVByTime?start=2022-01-01&end=2024-01-01",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"getAVByTime"
+							],
+							"query": [
+								{
+									"key": "start",
+									"value": "2022-01-01"
+								},
+								{
+									"key": "end",
+									"value": "2024-01-01"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getBookByStatus",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/getBookByStatus?status=逾期歸還",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"getBookByStatus"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "逾期歸還"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getAVByStatus",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/getAVByTime?status=逾期未歸還",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"getAVByTime"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "逾期未歸還"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "newBookLoan",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/books/borrow?book_id&u_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"books",
+								"borrow"
+							],
+							"query": [
+								{
+									"key": "book_id",
+									"value": null
+								},
+								{
+									"key": "u_id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "rooms",
+			"item": [
+				{
+					"name": "getStudyRoom",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/study-rooms",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"study-rooms"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getStudyRoomSeats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/study-rooms/:id/seats",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"study-rooms",
+								":id",
+								"seats"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null,
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getFixingSeats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/getFixingSeats",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"getFixingSeats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getDiscussionRoom",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/discussion_rooms",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"discussion_rooms"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getFixingDiscussionRoom",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/getFixingDiscussionRoom",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"getFixingDiscussionRoom"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updateStudyRoomStatus",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/updateStudyRoomStatus?status&room_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"updateStudyRoomStatus"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": null,
+									"description": "維修中, 可登記"
+								},
+								{
+									"key": "room_id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updateSeatsStatus",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/updateSeatsStatus?status&seat_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"updateSeatsStatus"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": null,
+									"description": "維修中, 可登記, 使用中"
+								},
+								{
+									"key": "seat_id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updateDiscussionRoomStatus",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/updateDiscussionRoomStatus?status&room_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"updateDiscussionRoomStatus"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": null,
+									"description": "維修中, 可登記"
+								},
+								{
+									"key": "room_id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "reserveDiscussionRoom",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/discussion_rooms/reserve?drId&userId&startTime&endTIme",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"discussion_rooms",
+								"reserve"
+							],
+							"query": [
+								{
+									"key": "drId",
+									"value": null
+								},
+								{
+									"key": "userId",
+									"value": null
+								},
+								{
+									"key": "startTime",
+									"value": null
+								},
+								{
+									"key": "endTIme",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "newStudyRoomApply",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/study-room/apply?userId&srId&startTime&endTime&seatId",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"study-room",
+								"apply"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": null
+								},
+								{
+									"key": "srId",
+									"value": null
+								},
+								{
+									"key": "startTime",
+									"value": null
+								},
+								{
+									"key": "endTime",
+									"value": null
+								},
+								{
+									"key": "seatId",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "av/books/author",
+			"item": [
+				{
+					"name": "newBook",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/newBook?Title&isbn&edition&p_year&genre&status",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"newBook"
+							],
+							"query": [
+								{
+									"key": "Title",
+									"value": null,
+									"description": "not null"
+								},
+								{
+									"key": "isbn",
+									"value": null
+								},
+								{
+									"key": "edition",
+									"value": null
+								},
+								{
+									"key": "p_year",
+									"value": null
+								},
+								{
+									"key": "genre",
+									"value": null
+								},
+								{
+									"key": "status",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "newAV",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/newAV?title&isan&status&p_year&duration",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"newAV"
+							],
+							"query": [
+								{
+									"key": "title",
+									"value": null
+								},
+								{
+									"key": "isan",
+									"value": null
+								},
+								{
+									"key": "status",
+									"value": null
+								},
+								{
+									"key": "p_year",
+									"value": null
+								},
+								{
+									"key": "duration",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "newBookAuthor",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/newBookAuthor?book_id&name",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"newBookAuthor"
+							],
+							"query": [
+								{
+									"key": "book_id",
+									"value": null
+								},
+								{
+									"key": "name",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "newAVAuthor",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/newBookAuthor?av_id&name",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"newBookAuthor"
+							],
+							"query": [
+								{
+									"key": "av_id",
+									"value": null
+								},
+								{
+									"key": "name",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "deleteBook",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/deleteBook?book_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"deleteBook"
+							],
+							"query": [
+								{
+									"key": "book_id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "deleteAV",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/deleteAV?av_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"deleteAV"
+							],
+							"query": [
+								{
+									"key": "av_id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updateBook",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/updateBook?title&isbn&edition&p_year&genre&book_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"updateBook"
+							],
+							"query": [
+								{
+									"key": "title",
+									"value": null
+								},
+								{
+									"key": "isbn",
+									"value": null
+								},
+								{
+									"key": "edition",
+									"value": null
+								},
+								{
+									"key": "p_year",
+									"value": null
+								},
+								{
+									"key": "genre",
+									"value": null
+								},
+								{
+									"key": "book_id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updateAV",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/updateAV?title&isbn&edition&p_year&genre&av_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"updateAV"
+							],
+							"query": [
+								{
+									"key": "title",
+									"value": null
+								},
+								{
+									"key": "isbn",
+									"value": null
+								},
+								{
+									"key": "edition",
+									"value": null
+								},
+								{
+									"key": "p_year",
+									"value": null
+								},
+								{
+									"key": "genre",
+									"value": null
+								},
+								{
+									"key": "av_id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updateBookStatus",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/updateBookStatus?status&book_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"updateBookStatus"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": null
+								},
+								{
+									"key": "book_id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updateAVStatus",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/updateAVStatus?status&av_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"updateAVStatus"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": null
+								},
+								{
+									"key": "av_id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getBook",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/books",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"books"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getBookByBookId",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/books/:bookId?book_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"books",
+								":bookId"
+							],
+							"query": [
+								{
+									"key": "book_id",
+									"value": null
+								}
+							],
+							"variable": [
+								{
+									"key": "bookId",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "bookSearchByTitle",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/books/search",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"books",
+								"search"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "user",
+			"item": [
+				{
+					"name": "getWishList",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/wishlist?userId",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"wishlist"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AddUsers",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/users?u_id&uName&gender&department&degree&enrollYear&grade&enrollmentStatus",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"users"
+							],
+							"query": [
+								{
+									"key": "u_id",
+									"value": null
+								},
+								{
+									"key": "uName",
+									"value": null
+								},
+								{
+									"key": "gender",
+									"value": null
+								},
+								{
+									"key": "department",
+									"value": null
+								},
+								{
+									"key": "degree",
+									"value": null
+								},
+								{
+									"key": "enrollYear",
+									"value": null
+								},
+								{
+									"key": "grade",
+									"value": null
+								},
+								{
+									"key": "enrollmentStatus",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getWishList",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/wishlist/apply?userId&date&isbnIsan",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"wishlist",
+								"apply"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": null
+								},
+								{
+									"key": "date",
+									"value": null
+								},
+								{
+									"key": "isbnIsan",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "book/av acquirition",
+			"item": [
+				{
+					"name": "newBookAcq",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/newBookAcq?a_date&status&isbn&cost&supplier",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"newBookAcq"
+							],
+							"query": [
+								{
+									"key": "a_date",
+									"value": null
+								},
+								{
+									"key": "status",
+									"value": null
+								},
+								{
+									"key": "isbn",
+									"value": null
+								},
+								{
+									"key": "cost",
+									"value": null
+								},
+								{
+									"key": "supplier",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "newAVAcq",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/newAVAcq?a_date&status&isan&cost&supplier",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"newAVAcq"
+							],
+							"query": [
+								{
+									"key": "a_date",
+									"value": null
+								},
+								{
+									"key": "status",
+									"value": null
+								},
+								{
+									"key": "isan",
+									"value": null
+								},
+								{
+									"key": "cost",
+									"value": null
+								},
+								{
+									"key": "supplier",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

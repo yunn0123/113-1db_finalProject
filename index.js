@@ -81,8 +81,8 @@ app.post('/newAVAcq', async (req, res) => {
 // 更新資料
 app.put('/updateBook', async (req, res) => {
     try{
-        const { title, isbn, edition, p_year, genre, book_id, status } = req.body;
-        const result = await updateBook(title, isbn, edition, p_year, genre, book_id, status);
+        const { title, isbn, edition, p_year, genre, status } = req.body;
+        const result = await updateBook(title, isbn, edition, p_year, genre, status);
         res.status(200).json({ message: '書籍更新成功', updatedRows: res.rowCount });
     } catch (err) {
         res.status(500).json({ error: '書籍更新失敗', details: err.message });
@@ -91,8 +91,8 @@ app.put('/updateBook', async (req, res) => {
 
 app.put('/updateAV', async (req, res) => {
     try{
-        const { title, isan, p_year, duration, av_id, status } = req.body;
-        const result = await updateAV(title, isan, p_year, duration, av_id, status);
+        const { title, isan, p_year, duration, status } = req.body;
+        const result = await updateAV(title, isan, p_year, duration, status);
         res.status(200).json({ message: 'AV更新成功', updatedRows: res.rowCount });
     } catch (err) {
         res.status(500).json({ error: 'AV更新失敗', details: err.message });
