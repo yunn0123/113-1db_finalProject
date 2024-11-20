@@ -1,5 +1,5 @@
 const express = require("express");
-const pool = require("./db");
+// const pool = require("./db");
 const { newBook, // 新增書籍
   newAV,
   newBookAcq, // 新增採買
@@ -40,16 +40,6 @@ app.get("/", (req, res) => {
   res.send("Welcome to the Library Management System API");
 });
 
-// 查詢所有書籍
-app.get("/books", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM books");
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // 查詢書籍（按標題過濾）
 app.get("/books/search", async (req, res) => {
   const { title } = req.query;
@@ -69,58 +59,209 @@ app.get("/books/search", async (req, res) => {
 // 借閱書籍
 app.post("/books/borrow", async (req, res) => {
   const { bookId, userId } = req.body;
-  console.log(bookId, userId);
 
+  // 檢查是否提供必要參數
+  if (!bookId || !userId) {
+    return res.status(400).json({ error: "Missing bookId or userId" });
+  }
+
+  // 開始交易
+  const client = await pool.connect();
   try {
-    const result = await pool.query(
+    await pool.query("BEGIN"); // 開始交易
+
+    // 確認書籍是否可借閱
+    const bookResult = await pool.query(
       "UPDATE books SET status = $1 WHERE book_id = $2 AND status = $3 RETURNING *",
       ["已被外借", bookId, "在架"]
     );
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Book not available" });
+
+    if (bookResult.rowCount === 0) {
+      await pool.query("ROLLBACK"); // 回滾交易
+      return res.status(404).json({ error: "Book not available for borrowing" });
     }
 
-    // 在 book_loan 表中插入紀錄
+    // 在 book_loan 表中新增借閱記錄
     const loanResult = await pool.query(
       "INSERT INTO book_loan (u_id, book_id, l_date, status) VALUES ($1, $2, CURRENT_DATE, $3) RETURNING *",
-      [userId, bookId, "未歸還"] // status 設為 "未歸還" //
+      [userId, bookId, "未歸還"]
     );
-    res.json(loanResult.rows[0]);
+
+    // 提交交易
+    await pool.query("COMMIT");
+    res.json({
+      message: "Book borrowed successfully",
+      book: bookResult.rows[0],
+      loan: loanResult.rows[0],
+    });
+  } catch (err) {
+    await pool.query("ROLLBACK"); // 發生錯誤時回滾交易
+    console.error("Error during book borrowing transaction:", err);
+    res.status(500).json({ error: "Failed to borrow book. Please try again later." });
+  } 
+});
+
+
+
+// 查詢書籍資料（根據書籍 ID 或 ISBN）
+app.get("/books", async (req, res) => {
+  const { bookId, isbn } = req.query;
+
+  try {
+    let query = 'SELECT * FROM books WHERE 1=1';
+    const values = [];
+
+    if (bookId) {
+      query += ' AND book_id = $1';
+      values.push(bookId);
+    }
+
+    if (isbn) {
+      query += values.length === 0 ? ' AND isbn = $1' : ' AND isbn = $2';
+      values.push(isbn);
+    }
+
+    if (values.length === 0) {
+      // 沒有提供查詢條件時，返回所有書籍
+      query = 'SELECT * FROM books';
+    }
+
+    const result = await pool.query(query, values);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'No books found.' });
+    }
+
+    res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// 根據書籍ID查詢書籍詳細資料
-app.get("/books/:bookId", async (req, res) => {
-  const { bookId } = req.params;
+// 查詢影音
+app.get('/av/search', async (req, res) => {
+  const { title, avId, isan } = req.query;
+
   try {
-    const result = await pool.query("SELECT * FROM books WHERE book_id = $1", [
-      bookId,
-    ]);
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Book not found" });
+    let query = 'SELECT * FROM av_material WHERE 1=1';
+    const values = [];
+
+    if (title) {
+      query += ' AND "Title" ILIKE $1';
+      values.push(`%${title}%`);
     }
-    res.json(result.rows[0]);
+
+    if (avId) {
+      query += values.length === 0 ? ' AND av_id = $1' : ' AND av_id = $2';
+      values.push(avId);
+    }
+
+    if (isan) {
+      query += values.length === 0 ? ' AND isan = $1' : ' AND isan = $2';
+      values.push(isan);
+    }
+
+    const result = await pool.query(query, values);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'No AV material found.' });
+    }
+
+    res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
+
+// 借閱影音
+app.post("/av/borrow", async (req, res) => {
+  const { avId, userId } = req.body;
+
+  // 檢查必要參數
+  if (!avId || !userId) {
+    return res.status(400).json({ error: "Missing avId or userId" });
+  }
+  try {
+    await pool.query("BEGIN"); // 開始交易
+
+    // 檢查影音是否可借閱
+    const avResult = await pool.query(
+      "UPDATE av_material SET status = $1 WHERE av_id = $2 AND status = $3 RETURNING *",
+      ["已被外借", avId, "在架"]
+    );
+
+    if (avResult.rowCount === 0) {
+      await pool.query("ROLLBACK"); // 回滾交易
+      return res.status(404).json({ error: "AV material not available for borrowing" });
+    }
+
+    // 新增借閱記錄到 av_loan 表
+    const loanResult = await pool.query(
+      "INSERT INTO av_loan (u_id, av_id, l_date, esti_r_date, status) VALUES ($1, $2, CURRENT_DATE, CURRENT_DATE + INTERVAL '7 days', $3) RETURNING *",
+      [userId, avId, "未歸還"]
+    );
+
+    await pool.query("COMMIT"); // 提交交易
+    res.json({
+      message: "AV material borrowed successfully",
+      av: avResult.rows[0],
+      loan: loanResult.rows[0],
+    });
+  } catch (err) {
+    await pool.query("ROLLBACK"); // 發生錯誤時回滾交易
+    console.error("Error during AV borrowing transaction:", err);
+    res.status(500).json({ error: "Failed to borrow AV material. Please try again later." });
+  }
+});
+
+
 
 // 預約討論室
 app.post("/discussion_rooms/reserve", async (req, res) => {
   const { drId, userId, startTime, endTime } = req.body;
-  console.log(drId, userId, startTime, endTime);
+
+  // 檢查必要參數
+  if (!drId || !userId || !startTime || !endTime) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
   try {
-    const result = await pool.query(
-      "INSERT INTO discussion_room_application (dr_id, u_id, s_time, e_time, application_time) VALUES ($1, $2, $3, $4, NOW()) RETURNING *",
+    await pool.query("BEGIN"); // 開始交易
+
+    // 檢查是否有時間衝突
+    const conflictCheck = await pool.query(
+      `SELECT * 
+       FROM discussion_room_application 
+       WHERE dr_id = $1 
+         AND (($2 < e_time AND $3 > s_time))`,
+      [drId, startTime, endTime]
+    );
+
+    if (conflictCheck.rowCount > 0) {
+      await pool.query("ROLLBACK"); // 回滾交易
+      return res.status(409).json({ error: "Time slot conflict for the selected discussion room" });
+    }
+
+    // 插入新的預約記錄
+    const reserveResult = await pool.query(
+      `INSERT INTO discussion_room_application 
+       (dr_id, u_id, s_time, e_time, application_time) 
+       VALUES ($1, $2, $3, $4, NOW()) 
+       RETURNING *`,
       [drId, userId, startTime, endTime]
     );
-    res.json(result.rows[0]);
+
+    await pool.query("COMMIT"); // 提交交易
+    res.json({
+      message: "Discussion room reserved successfully",
+      reservation: reserveResult.rows[0],
+    });
   } catch (err) {
+    await pool.query("ROLLBACK"); // 發生錯誤時回滾交易
     res.status(500).json({ error: err.message });
-  }
+  } 
 });
+
 
 // 查詢所有討論室
 app.get("/discussion_rooms", async (req, res) => {
@@ -156,38 +297,52 @@ app.get("/study-rooms/:id/seats", async (req, res) => {
 });
 
 // 申請自習室並更新座位狀態
-app.post('/study-room/apply', async (req, res) => {
-  const { userId, srId, startTime, endTime, seatId } = req.body;
+app.post("/discussion_rooms/reserve", async (req, res) => {
+  const { drId, userId, startTime, endTime } = req.body;
+
+  // 檢查必要參數
+  if (!drId || !userId || !startTime || !endTime) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
   try {
-      // 檢查是否有重疊的時間段
-      const conflictCheck = await pool.query(
-          'SELECT * FROM study_room_application WHERE sr_id = $1 AND s_time < $3 AND e_time > $2',
-          [srId, startTime, endTime]
-      );
+    await pool.query("BEGIN"); // 開始交易
 
-      if (conflictCheck.rowCount > 0) {
-          return res.status(409).json({
-              error: 'The selected time slot conflicts with an existing reservation.'
-          });
-      }
+    // 檢查是否有時間衝突的預約
+    const conflictCheck = await pool.query(
+      `SELECT * 
+       FROM discussion_room_application 
+       WHERE dr_id = $1 
+         AND (($2 < e_time AND $3 > s_time))`,
+      [drId, startTime, endTime]
+    );
 
-      // 插入申請記錄
-      const result = await pool.query(
-          'INSERT INTO study_room_application (sr_id, u_id, s_time, e_time) VALUES ($1, $2, $3, $4) RETURNING *',
-          [srId, userId, startTime, endTime]
-      );
+    if (conflictCheck.rowCount > 0) {
+      await pool.query("ROLLBACK"); // 回滾交易
+      return res.status(409).json({ error: "Time slot conflict for the selected discussion room" });
+    }
 
-      // 更新座位狀態為 "使用中"
-      await pool.query(
-          'UPDATE seats SET status = $1 WHERE seat_id = $2 AND sr_id = $3',
-          ['使用中', seatId, srId]
-      );
+    // 插入新的預約記錄
+    const reserveResult = await pool.query(
+      `INSERT INTO discussion_room_application 
+       (dr_id, u_id, s_time, e_time, application_time) 
+       VALUES ($1, $2, $3, $4, NOW()) 
+       RETURNING *`,
+      [drId, userId, startTime, endTime]
+    );
 
-      res.status(201).json(result.rows[0]);
+    await pool.query("COMMIT"); // 提交交易
+    res.json({
+      message: "Discussion room reserved successfully",
+      reservation: reserveResult.rows[0],
+    });
   } catch (err) {
-      res.status(500).json({ error: err.message });
+    await pool.query("ROLLBACK"); // 發生錯誤時回滾交易
+    console.error("Error during discussion room reservation:", err);
+    res.status(500).json({ error: "Failed to reserve discussion room. Please try again later." });
   }
 });
+
 
 // 查詢使用者的許願列表
 app.get("/wishlist", async (req, res) => {
@@ -205,16 +360,32 @@ app.get("/wishlist", async (req, res) => {
 // 提交許願
 app.post("/wishlist", async (req, res) => {
   const { userId, date, isbnIsan } = req.body; // 從請求主體接收資料
+
+  // 檢查必要參數
+  if (!userId || !date || !isbnIsan) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
   try {
+    await pool.query("BEGIN"); // 開始交易
+
+    // 新增許願記錄
     const result = await pool.query(
       "INSERT INTO wish_list (u_id, date, isbn_isan, status) VALUES ($1, $2, $3, $4) RETURNING *",
       [userId, date, isbnIsan, null] // `status` 設為 NULL
     );
-    res.json(result.rows[0]); // 返回新增的許願記錄
+
+    await pool.query("COMMIT"); // 提交交易
+
+    res.json({
+      message: "Wishlist item added successfully",
+      wish: result.rows[0],
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message }); // 錯誤處理
-  }
+    await pool.query("ROLLBACK"); // 發生錯誤時回滾交易
+    res.status(500).json({ error: err.message });
+  } 
 });
+
 
 // 註冊使用者
 app.post("/users", async (req, res) => {
