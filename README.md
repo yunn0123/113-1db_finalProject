@@ -14,7 +14,7 @@
     ```sh
     cd 113-1db_finalProject
     ```
-3. 安裝依賴：
+3. 安裝：
     ```sh
     npm install
     ```
