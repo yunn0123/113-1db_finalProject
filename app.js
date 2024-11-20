@@ -82,8 +82,8 @@ app.post("/books/borrow", async (req, res) => {
 
     // 在 book_loan 表中插入紀錄
     const loanResult = await pool.query(
-      "INSERT INTO book_loan (u_id, book_id, l_date, status) VALUES ($1, $2, NOW(), $3) RETURNING *",
-      [userId, bookId, "已被外借"]
+      "INSERT INTO book_loan (u_id, book_id, l_date, status) VALUES ($1, $2, CURRENT_DATE, $3) RETURNING *",
+      [userId, bookId, "未歸還"] // status 設為 "未歸還" //
     );
     res.json(loanResult.rows[0]);
   } catch (err) {
