@@ -1,4 +1,4 @@
-const { get, update } = require('lodash');
+// const { get, update } = require('lodash');
 const db = require('./db.js');
 
 const queries = {
