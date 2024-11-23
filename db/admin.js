@@ -6,8 +6,8 @@ const queries = {
     newBook: 'INSERT INTO books (title, isbn, edition, p_year, Genre, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING book_id',
     newAV: 'INSERT INTO av_material (title, isan, status, p_year, duration) VALUES ($1, $2, $3, $4, $5) RETURNING av_id',
     // add author (新增書籍時自動加入)
-    newBookAuthor: 'INSERT INTO book_authors (book_id, name) VALUES ($1, $2)',
-    newAVAuthor: 'INSERT INTO av_authors (av_id, name) VALUES ($1, $2)',    
+    newBookAuthor: 'INSERT INTO book_authors (book_id, author) VALUES ($1, $2)',
+    newAVAuthor: 'INSERT INTO av_authors (av_id, author) VALUES ($1, $2)',    
     // 新增採買
     newBookAcq: "INSERT INTO book_acq (library_id, a_date, status, isbn, cost, supplier) VALUES ('L001', $1, $2, $3, $4, $5)",
     newAVAcq: "INSERT INTO av_acq (library_id, a_date, status, isan, cost, supplier) VALUES ('L001', $1, $2, $3, $4, $5)",
