@@ -398,10 +398,13 @@ app.post("/users", async (req, res) => {
     enrollYear,
     grade,
     enrollmentStatus,
+    password,
   } = req.body;
   try {
+
+    await pool.query("BEGIN"); // 開始交易
     const result = await pool.query(
-      'INSERT INTO "user" (u_id, u_name, gender, department, degree, enroll_year, grade, enrollment_status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      'INSERT INTO "user" (u_id, u_name, gender, department, degree, enroll_year, grade, enrollment_status, password) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
       [
         uId,
         uName,
@@ -411,10 +414,13 @@ app.post("/users", async (req, res) => {
         enrollYear,
         grade,
         enrollmentStatus,
+        password,
       ]
     );
+    await pool.query("COMMIT"); // 提交交易
     res.json(result.rows[0]);
   } catch (err) {
+    await pool.query("ROLLBACK"); // 發生錯誤時回滾交易
     res.status(500).json({ error: err.message });
   }
 });
