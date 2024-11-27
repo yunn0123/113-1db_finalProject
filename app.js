@@ -430,11 +430,11 @@ app.post("/users", async (req, res) => {
 });
 
 // admin function
-// 新增書展，順便傳入書籍
+// 新增書展，順便傳入書單
 app.post('/newFair', async (req, res) => {
   try{
-      const { fair_id, fair_name, fair_date, fair_location, fair_description, books } = req.body;
-      const result = await newFair(fair_id, fair_name, fair_date, fair_location, fair_description, books);
+      const { name, s_date, e_date, books } = req.body;
+      const result = await newFair(name, s_date, e_date, books);
       res.status(200).json({ message: '新增書展成功', updatedRows: res.rowCount });
   } catch (err) {
       res.status(500).json({ error: '新增書展失敗', details: err.message });
