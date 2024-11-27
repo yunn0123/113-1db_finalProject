@@ -45,15 +45,15 @@ const queries = {
     updateSeatsStatus: "UPDATE seats SET status = $1 WHERE seat_id = $2 FOR UPDATE",
     updateStudyRoomStatus: "UPDATE study_room SET status = $1 WHERE room_id = $2 FOR UPDATE",
     // 書展
-    newFair: "INSERT INTO fair (name, s_date, e_date, library_id, fair_id) VALUES ($1, $2, $3, $4, $5) RETURNING fair_id",
+    newFair: "INSERT INTO fair (name, s_date, e_date, library_id) VALUES ($1, $2, $3, 'L001') RETURNING fair_id",
     newFairBook: "INSERT INTO fair_books (fair_id, book_id) VALUES ($1, $2)",
     updateFairStartDate: "UPDATE fair SET s_date = $1 WHERE fair_id = $2 FOR UPDATE",
     updateFairEndDate: "UPDATE fair SET e_date = $1 WHERE fair_id = $2 FOR UPDATE",
 }
-const newFair = async (fair_id, fair_name, fair_date, fair_location, fair_description, books) => {
+const newFair = async (name, s_date, e_date, books) => {
     try{
         await db.query('BEGIN');
-        const res = await db.query(queries.newFair, [fair_id, fair_name, fair_date, fair_location, fair_description]);
+        const res = await db.query(queries.newFair, [name, s_date, e_date]);
         const fair_id = res.rows[0].fair_id;
         console.log('新增書展成功');
         if (books.length > 0) {
