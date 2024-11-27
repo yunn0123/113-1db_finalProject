@@ -390,6 +390,64 @@ app.post("/wishlist/apply", async (req, res) => {
   } 
 });
 
+// 查詢現有書展
+app.get("/fairs/active", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT name, s_date, e_date 
+       FROM book_fair 
+       WHERE CURRENT_DATE BETWEEN s_date AND e_date`
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "No active fairs found." });
+    }
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching active fairs:", err);
+    res.status(500).json({ error: "Failed to fetch active fairs." });
+  }
+});
+
+app.get("/fairs/:name/books", async (req, res) => {
+  const { name } = req.params; // 書展名稱
+
+  try {
+    await pool.query("BEGIN"); // 開始交易
+
+    // 查詢該書展內的所有書籍 ID
+    const fairBooksResult = await pool.query(
+      `SELECT book_id 
+       FROM book_fair_books 
+       WHERE name = $1`,
+      [name]
+    );
+
+    if (fairBooksResult.rowCount === 0) {
+      await pool.query("ROLLBACK"); // 回滾交易
+      return res.status(404).json({ message: "No books found for this fair." });
+    }
+
+    const bookIds = fairBooksResult.rows.map(row => row.book_id);
+
+    // 查詢這些書籍的詳細資訊
+    const booksResult = await pool.query(
+      `SELECT * 
+       FROM books 
+       WHERE book_id = ANY($1)`,
+      [bookIds]
+    );
+
+    await pool.query("COMMIT"); // 提交交易
+    res.json(booksResult.rows);
+  } catch (err) {
+    await pool.query("ROLLBACK"); // 發生錯誤時回滾交易
+    console.error("Error fetching books for fair:", err);
+    res.status(500).json({ error: "Failed to fetch books for fair." });
+  }
+});
+
 
 // 註冊使用者
 app.post("/users", async (req, res) => {
