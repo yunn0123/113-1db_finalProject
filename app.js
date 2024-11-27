@@ -1,6 +1,8 @@
 const express = require("express");
 // const pool = require("./db");
-const { newBook, // 新增書籍
+const { 
+  newBook, // 新增書籍
+  newFair, // 新增書展
   newAV,
   newBookAcq, // 新增採買
   newAVAcq,
@@ -16,6 +18,8 @@ const { newBook, // 新增書籍
   updateOverdueAVLoan, 
   ratingBook, // 評分
   ratingAV,
+  updateFairStartDate, // 更新書展日期
+  updateFairEndDate,
   getBookLoansByUser, // 查詢歷史學生借閱紀錄
   getAVLoansByUser,
   getBookByTime, // 查詢某時間段借閱紀錄
@@ -426,22 +430,33 @@ app.post("/users", async (req, res) => {
 });
 
 // admin function
-// 新增書籍
+// 新增書展，順便傳入書籍
+app.post('/newFair', async (req, res) => {
+  try{
+      const { fair_id, fair_name, fair_date, fair_location, fair_description, books } = req.body;
+      const result = await newFair(fair_id, fair_name, fair_date, fair_location, fair_description, books);
+      res.status(200).json({ message: '新增書展成功', updatedRows: res.rowCount });
+  } catch (err) {
+      res.status(500).json({ error: '新增書展失敗', details: err.message });
+  }
+});
+
+// 新增書籍，順便傳入作者
 app.post('/newBook', async (req, res) => {
   try{
-      const { title, isbn, edition, p_year, genre, status } = req.body;
-      const result = await newBook(title, isbn, edition, p_year, genre, status);
+      const { title, isbn, edition, p_year, genre, status, author } = req.body;
+      const result = await newBook(title, isbn, edition, p_year, genre, status, author);
       res.status(200).json({ message: '新增書籍成功', updatedRows: res.rowCount });
   } catch (err) {
       res.status(500).json({ error: '新增書籍失敗', details: err.message });   
   }
 });
 
-// 新增AV
+// 新增AV，順便傳入作者
 app.post('/newAV', async (req, res) => {
   try{
-      const { title, isan, status, p_year, duration } = req.body;
-      const result = await newAV(title, isan, status, p_year, duration);
+      const { title, isan, status, p_year, duration, author } = req.body;
+      const result = await newAV(title, isan, status, p_year, duration, author);
       res.status(200).json({ message: '新增影音成功', updatedRows: res.rowCount });
   } catch (err) {
       res.status(500).json({ error: '新增影音失敗', details: err.message });
@@ -586,6 +601,27 @@ app.put('/ratingAV', async (req, res) => {
       res.status(500).json({ error: '評分失敗', details: err.message });
   }
 });
+
+app.put('/updateFairStartDate', async (req, res) => {
+  try{
+      const { fair_id, s_date } = req.body;
+      const result = await updateFairStartDate(fair_id, s_date);
+      res.status(200).json({ message: '書展日期更新成功', updatedRows: res.rowCount });
+  } catch (err) {
+      res.status(500).json({ error: '書展日期更新失敗', details: err.message });
+  }
+});
+
+app.put('/updateFairEndDate', async (req, res) => {
+  try{
+      const { fair_id, e_date } = req.body;
+      const result = await updateFairStartDate(fair_id, e_date);
+      res.status(200).json({ message: '書展日期更新成功', updatedRows: res.rowCount });
+  } catch (err) {
+      res.status(500).json({ error: '書展日期更新失敗', details: err.message });
+  }
+});
+
 // 學歷：B,R,D 入學年：08-13, 學號順序：01-80
 app.get('/getBookLoansByUser', async (req, res) => {
   try{

@@ -44,7 +44,34 @@ const queries = {
     updateDiscussionRoomStatus: "UPDATE discussion_room SET status = $1 WHERE room_id = $2 FOR UPDATE",
     updateSeatsStatus: "UPDATE seats SET status = $1 WHERE seat_id = $2 FOR UPDATE",
     updateStudyRoomStatus: "UPDATE study_room SET status = $1 WHERE room_id = $2 FOR UPDATE",
+    // 書展
+    newFair: "INSERT INTO fair (name, s_date, e_date, library_id, fair_id) VALUES ($1, $2, $3, $4, $5) RETURNING fair_id",
+    newFairBook: "INSERT INTO fair_books (fair_id, book_id) VALUES ($1, $2)",
+    updateFairStartDate: "UPDATE fair SET s_date = $1 WHERE fair_id = $2 FOR UPDATE",
+    updateFairEndDate: "UPDATE fair SET e_date = $1 WHERE fair_id = $2 FOR UPDATE",
 }
+const newFair = async (fair_id, fair_name, fair_date, fair_location, fair_description, books) => {
+    try{
+        await db.query('BEGIN');
+        const res = await db.query(queries.newFair, [fair_id, fair_name, fair_date, fair_location, fair_description]);
+        const fair_id = res.rows[0].fair_id;
+        console.log('新增書展成功');
+        if (books.length > 0) {
+            for (let i = 0; i < books.length; i++) {
+                await db.query(queries.newFairBook, [fair_id, books[i]]);
+            }
+            console.log('新增書展書籍成功');
+            await db.query('COMMIT');
+        }else{
+            console.log('新增書展書籍失敗:無書籍');
+            await db.query('ROLLBACK');
+        }
+    } catch (error) {
+        await db.query('ROLLBACK'); // 發生錯誤時回滾
+        console.error('新增書展失敗:', error.message);
+        throw error; // 將錯誤拋出以供上層處理
+    }
+};
 
 const newBook = async (title, isbn, edition, p_year, genre, status, author) => {
     try{
@@ -52,6 +79,7 @@ const newBook = async (title, isbn, edition, p_year, genre, status, author) => {
         const res = await db.query(queries.newBook, [title, isbn, edition, p_year, genre, status]);
         const book_id = res.rows[0].book_id;
         console.log('新增書籍成功, book_id', book_id);
+
         if (author.length > 0) {
             for (let i = 0; i < author.length; i++) {
                 await db.query(queries.newBookAuthor, [book_id, author[i]]);
@@ -301,6 +329,34 @@ const ratingAV = async (rating, av_id, u_id) => {
     }
 };
 
+// 更新書展開始日期
+const updateFairStartDate = async (s_date, fair_id) => {
+    try{
+        await db.query('BEGIN');
+        const res = await db.query(queries.updateFairEndDate, [e_date, fair_id]);
+        console.log('更新書展結束日期成功');
+        await db.query('COMMIT');
+        return res.rowCount;
+    } catch (error) {
+        await db.query('ROLLBACK'); // 發生錯誤時回滾
+        console.error('更新書展結束日期失敗:', error.message);
+        throw error; // 將錯誤拋出以供上層處理
+    }
+};
+// 更新書展結束日期
+const updateFairEndDate = async (e_date, fair_id) => {
+    try{
+        await db.query('BEGIN');
+        const res = await db.query(queries.updateFairEndDate, [e_date, fair_id]);
+        console.log('更新書展結束日期成功');
+        await db.query('COMMIT');
+        return res.rowCount;
+    } catch (error) {
+        await db.query('ROLLBACK'); // 發生錯誤時回滾
+        console.error('更新書展結束日期失敗:', error.message);
+        throw error; // 將錯誤拋出以供上層處理
+    }
+};
 //////////////////////////////////
 
 // get
@@ -459,6 +515,7 @@ const updateStudyRoomStatus = async (status, room_id) => {
 }
 
 module.exports = {
+    newFair,
     newBook,
     newAV,
     newBookAcq,
@@ -475,6 +532,8 @@ module.exports = {
     updateOverdueAVLoan,
     ratingBook,
     ratingAV,
+    updateFairStartDate,
+    updateFairEndDate,
     getBookLoansByUser,
     getAVLoansByUser,
     getBookByTime,
