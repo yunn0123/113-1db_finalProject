@@ -30,7 +30,7 @@ const {
   getFixingSeats, // 查詢維修中座位
   updateDiscussionRoomStatus, // 更新討論室狀態
   updateSeatsStatus, // 更新座位狀態
-  updateStudyRoomStatus, // 更新自習室狀態
+  // updateStudyRoomStatus, // 更新自習室狀態
 
 } = require('./db/admin.js'); // 引入 admin.js 中的函數
 const app = express();
@@ -782,15 +782,15 @@ app.put('/updateSeatsStatus', async (req, res) => {
   }
 });
 
-app.put('/updateStudyRoomStatus', async (req, res) => {
-  try{
-      const { status, room_id } = req.body;
-      const result = await updateStudyRoomStatus(status, room_id);
-      res.status(200).json({ message: '自習室狀態更新成功', updatedRows: res.rowCount });
-  } catch (err) {
-      res.status(500).json({ error: '自習室狀態更新失敗', details: err.message });
-  }
-});
+// app.put('/updateStudyRoomStatus', async (req, res) => {
+//   try{
+//       const { status, room_id } = req.body;
+//       const result = await updateStudyRoomStatus(status, room_id);
+//       res.status(200).json({ message: '自習室狀態更新成功', updatedRows: res.rowCount });
+//   } catch (err) {
+//       res.status(500).json({ error: '自習室狀態更新失敗', details: err.message });
+//   }
+// });
 
 
 const PORT = 3000;

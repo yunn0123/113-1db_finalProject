@@ -30,7 +30,7 @@ const queries = {
     ratingBook: "UPDATE book_loan SET rating = $1 WHERE book_id = $2 and u_id = $3 FOR UPDATE",
     ratingAV: "UPDATE av_loan SET rating = $1 WHERE av_id = $2 and u_id = $3 FOR UPDATE",
     // 查詢歷史學生借閱紀錄
-    getBookLoansByUser: "SELECT * FROM book_loan WHERE u_id = $1",
+    getBookLoansByUser: "SELECT * FROM book_loan WHERE u_id = $1 ORDER BY l_date DESC",
     getAVLoansByUser: "SELECT * FROM av_loan WHERE u_id = $1",
     // 查詢某時間段借閱紀錄
     getBookByTime: "SELECT * FROM book_loan WHERE l_date BETWEEN $1 AND $2",
@@ -43,7 +43,7 @@ const queries = {
     getFixingSeats: "SELECT * FROM seats WHERE status = '維修中'",
     updateDiscussionRoomStatus: "UPDATE discussion_room SET status = $1 WHERE room_id = $2 FOR UPDATE",
     updateSeatsStatus: "UPDATE seats SET status = $1 WHERE seat_id = $2 FOR UPDATE",
-    updateStudyRoomStatus: "UPDATE study_room SET status = $1 WHERE room_id = $2 FOR UPDATE",
+    // updateStudyRoomStatus: "UPDATE study_room SET status = $1 WHERE room_id = $2 FOR UPDATE",
     // 書展
     newFair: "INSERT INTO fair (name, s_date, e_date, library_id) VALUES ($1, $2, $3, 'L001') RETURNING fair_id",
     newFairBook: "INSERT INTO fair_books (fair_id, book_id) VALUES ($1, $2)",
@@ -500,19 +500,19 @@ const updateSeatsStatus = async (status, seat_id) => {
     }
 }
 
-const updateStudyRoomStatus = async (status, room_id) => {
-    try{
-        await db.query('BEGIN');
-        const res = await db.query(queries.updateStudyRoomStatus, [status, room_id]);
-        console.log('更新自修室狀態成功');
-        await db.query('COMMIT');
-        return res.rowCount;
-    } catch (error) {
-        await db.query('ROLLBACK'); // 發生錯誤時回滾
-        console.error('更新自修室狀態失敗:', error.message);
-        throw error; // 將錯誤拋出以供上層處理
-    }
-}
+// const updateStudyRoomStatus = async (status, room_id) => {
+//     try{
+//         await db.query('BEGIN');
+//         const res = await db.query(queries.updateStudyRoomStatus, [status, room_id]);
+//         console.log('更新自修室狀態成功');
+//         await db.query('COMMIT');
+//         return res.rowCount;
+//     } catch (error) {
+//         await db.query('ROLLBACK'); // 發生錯誤時回滾
+//         console.error('更新自修室狀態失敗:', error.message);
+//         throw error; // 將錯誤拋出以供上層處理
+//     }
+// }
 
 module.exports = {
     newFair,
@@ -544,5 +544,5 @@ module.exports = {
     getFixingSeats,
     updateDiscussionRoomStatus,
     updateSeatsStatus,
-    updateStudyRoomStatus,
+    // updateStudyRoomStatus,
 };
