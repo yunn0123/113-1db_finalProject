@@ -1,5 +1,5 @@
 // const { get, update } = require('lodash');
-const db = require('./db.js');
+const db = require('../db.js');
 
 const queries = {
     // 新增書籍
