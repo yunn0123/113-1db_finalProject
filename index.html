@@ -41,7 +41,6 @@
     let loggedInUser = JSON.parse(localStorage.getItem('loggedInUser')) || null;
 
     function showActions() {
-        // Delay appending actions until after other results have been displayed
         setTimeout(() => {
             let actions = '<strong>Available Actions:</strong>';
 
@@ -54,10 +53,10 @@
                 actions += `<div>2. borrow_books [bookID]</div>`;
                 actions += `<div>3. borrow_av [avID]</div>`;
                 actions += `<div>4. view_discussion_rooms</div>`;
-                actions += `<div>5. reserve_discussion_rooms [discussion_roomID] [startTime] [endTime]</div>`;
+                actions += `<div>5. reserve_discussion_rooms [discussion_roomID] [startTime (in YYYY-MM-DD HH:MM format)] [endTime (in YYYY-MM-DD HH:MM format)]</div>`;
                 actions += `<div>6. view_study_rooms</div>`;
                 actions += `<div>7. view_seats [roomID]</div>`;
-                actions += `<div>8. reserve_study_rooms [study_roomID] [startTime] [endTime]</div>`;
+                actions += `<div>8. reserve_study_rooms [study_roomID] [startTime (in YYYY-MM-DD HH:MM format)] [endTime (in YYYY-MM-DD HH:MM format)]</div>`;
                 actions += `<div>9. submit_wishlist [isbn/isan]</div>`;
                 actions += `<div>10. view_wishlist</div>`;
                 actions += `<div>11. search_active_fairs</div>`;
@@ -67,10 +66,8 @@
                 actions += `<div>1. acquire_book [title] [author]</div>`;
                 actions += `<div>2. logout</div>`;
             }
-
-            // Append actions after a short delay to ensure previous results are shown first
             appendOutput(actions, true);
-        }, 500); // Adjust the delay (in milliseconds) as needed
+        }, 500);
     }
 
 
