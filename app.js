@@ -354,49 +354,80 @@ app.get("/study-rooms/:id/seats", async (req, res) => {
 });
 
 // 申請自習室並更新座位狀態
-app.post("/discussion_rooms/reserve", async (req, res) => {
-  const { drId, userId, startTime, endTime } = req.body;
+app.post("/study-rooms/reserve", async (req, res) => {
+  const { srId, userId, seatId, startTime, endTime } = req.body;
 
-  // 檢查必要參數
-  if (!drId || !userId || !startTime || !endTime) {
+  // 檢查必填字段
+  if (!srId || !userId || !seatId || !startTime || !endTime) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
+  const client = await pool.connect();
   try {
-    await pool.query("BEGIN"); // 開始交易
+    await client.query("BEGIN"); // 開始交易
 
     // 檢查是否有時間衝突的預約
-    const conflictCheck = await pool.query(
+    const conflictCheck = await client.query(
       `SELECT * 
-       FROM discussion_room_application 
-       WHERE dr_id = $1 
+       FROM study_room_application 
+       WHERE sr_id = $1 
          AND (($2 < e_time AND $3 > s_time))`,
-      [drId, startTime, endTime]
+      [srId, startTime, endTime]
     );
 
     if (conflictCheck.rowCount > 0) {
-      await pool.query("ROLLBACK"); // 回滾交易
-      return res.status(409).json({ error: "Time slot conflict for the selected discussion room" });
+      await client.query("ROLLBACK");
+      return res.status(409).json({ error: "Time slot conflict for the selected study room" });
+    }
+
+    // 檢查座位是否屬於該自習室並且可用
+    const seatCheck = await client.query(
+      `SELECT * 
+       FROM seats 
+       WHERE seat_id = $1 AND sr_id = $2 AND status = '可登記'`,
+      [seatId, srId]
+    );
+
+    if (seatCheck.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "The selected seat is not available or does not belong to the specified study room" });
     }
 
     // 插入新的預約記錄
-    const reserveResult = await pool.query(
-      `INSERT INTO discussion_room_application 
-       (dr_id, u_id, s_time, e_time, application_time) 
-       VALUES ($1, $2, $3, $4, NOW()) 
+    const reserveResult = await client.query(
+      `INSERT INTO study_room_application 
+       (sr_id, u_id, s_time, e_time) 
+       VALUES ($1, $2, $3, $4) 
        RETURNING *`,
-      [drId, userId, startTime, endTime]
+      [srId, userId, startTime, endTime]
     );
 
-    await pool.query("COMMIT"); // 提交交易
+    // 更新座位狀態為「使用中」
+    const seatUpdate = await client.query(
+      `UPDATE seats 
+       SET status = '使用中' 
+       WHERE seat_id = $1 
+       RETURNING *`,
+      [seatId]
+    );
+
+    if (seatUpdate.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return res.status(500).json({ error: "Failed to update seat status" });
+    }
+
+    await client.query("COMMIT"); // 提交交易
     res.json({
-      message: "Discussion room reserved successfully",
+      message: "Study room reserved successfully",
       reservation: reserveResult.rows[0],
+      seat: seatUpdate.rows[0],
     });
   } catch (err) {
-    await pool.query("ROLLBACK"); // 發生錯誤時回滾交易
-    console.error("Error during discussion room reservation:", err);
-    res.status(500).json({ error: "Failed to reserve discussion room. Please try again later." });
+    await client.query("ROLLBACK"); // 發生錯誤時回滾交易
+    console.error("Error during study room reservation:", err);
+    res.status(500).json({ error: "Failed to reserve study room. Please try again later." });
+  } finally {
+    client.release();
   }
 });
 
