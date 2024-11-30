@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System</title>
+    <style>
+        body {
+            font-family: monospace;
+            background-color: #282c34;
+            color: #61dafb;
+            padding: 20px;
+        }
+        #output {
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #61dafb;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        #commandInput {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background-color: #282c34;
+            color: #61dafb;
+            outline: none;
+        }
+        .command-text {
+            color: #9cdcfe;
+        }
+    </style>
+</head>
+<body>
+<div id="output"></div>
+<input type="text" id="commandInput" placeholder="Type a command... (use /help to see commands)" autofocus>
+
+<script>
+    const outputElement = document.getElementById('output');
+    const commandInput = document.getElementById('commandInput');
+    let loggedInUser = JSON.parse(localStorage.getItem('loggedInUser')) || null;
+
+    function showActions() {
+        // Delay appending actions until after other results have been displayed
+        setTimeout(() => {
+            let actions = '<strong>Available Actions:</strong>';
+
+            if (!loggedInUser) {
+                actions += `<div>1. register [uId] [uName] [gender] [department] [degree] [enrollYear] [grade] [enrollmentStatus] [password]</div>`;
+                actions += `<div>2. login [uId] [password]</div>`;
+            } else if (loggedInUser.role !== "admin") {
+                actions += `<div>1. search_books [title]</div>`;
+                actions += `<div>1. search_av [title]</div>`;
+                actions += `<div>2. borrow_books [bookID]</div>`;
+                actions += `<div>3. borrow_av [avID]</div>`;
+                actions += `<div>4. view_discussion_rooms</div>`;
+                actions += `<div>5. reserve_discussion_rooms [discussion_roomID] [startTime] [endTime]</div>`;
+                actions += `<div>6. view_study_rooms</div>`;
+                actions += `<div>7. view_seats [roomID]</div>`;
+                actions += `<div>8. reserve_study_rooms [study_roomID] [startTime] [endTime]</div>`;
+                actions += `<div>9. submit_wishlist [isbn/isan]</div>`;
+                actions += `<div>10. view_wishlist</div>`;
+                actions += `<div>11. search_active_fairs</div>`;
+                actions += `</div>12. search_fair_books [fairName]</div>`;
+                actions += `<div>11. logout</div>`;
+            } else if (loggedInUser.role === "admin") {
+                actions += `<div>1. acquire_book [title] [author]</div>`;
+                actions += `<div>2. logout</div>`;
+            }
+
+            // Append actions after a short delay to ensure previous results are shown first
+            appendOutput(actions, true);
+        }, 500); // Adjust the delay (in milliseconds) as needed
+    }
+
+
+    function appendOutput(text, isSystemMessage = false) {
+        const messageClass = isSystemMessage ? "system-message" : "command-text";
+        outputElement.innerHTML += `<div class="${messageClass}">${text}</div>`;
+        outputElement.scrollTop = outputElement.scrollHeight;
+    }
+
+    async function processCommand(command) {
+        const commandParts = command.split(' ');
+        const action = commandParts[0].toLowerCase();
+
+        switch (action) {
+            case '/help':
+                showActions();
+                break;
+            case 'register':
+                if (commandParts.length !== 10) {
+                    appendOutput(
+                        `Usage: register [uId] [uName] [gender] [department] [degree] [enrollYear] [grade] [enrollmentStatus] [password]`
+                    );
+                    break;
+                }
+                console.log(commandParts.length);
+                const [uId, uName, gender, department, degree, enrollYear, grade, enrollmentStatus, password] = commandParts.slice(1);
+
+                if (!uId || !uName || !gender || !department || !degree || !enrollYear || !grade || !enrollmentStatus || !password) {
+                    appendOutput('All fields are required for registration. Please try again.');
+                    break;
+                }
+
+                try {
+                    const registerResponse = await fetch('http://localhost:3000/users', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            uId,
+                            uName,
+                            gender,
+                            department,
+                            degree,
+                            enrollYear,
+                            grade,
+                            enrollmentStatus,
+                            password,
+                        }),
+                    }).then((res) => res.json());
+
+                    if (registerResponse?.u_id) {
+                        appendOutput(`Registration successful. User ID: ${registerResponse.u_id}`);
+                    } else {
+                        appendOutput(`Registration failed: ${registerResponse.error || 'Unknown error'}`);
+                    }
+                } catch (error) {
+                    appendOutput('Error during registration. Please try again.');
+                    console.error('Register Error:', error);
+                }
+                break;
+            case 'login':
+                if (commandParts.length !== 3) {
+                    appendOutput('Usage: login [uId] [password]');
+                    break;
+                }
+
+                const userId = commandParts[1];
+                const loginPassword = commandParts[2];
+
+                // Admin credentials (stored in frontend)
+                const ADMIN_ID = "admin";
+                const ADMIN_PASSWORD = "passworduwu"; // Replace with your desired admin password
+
+                try {
+                    if (userId === ADMIN_ID && loginPassword === ADMIN_PASSWORD) {
+                        // Handle admin login
+                        loggedInUser = { id: ADMIN_ID, name: "Admin", role: "admin" }; // Mocked admin user object
+                        localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+                        appendOutput(`Welcome, ${loggedInUser.name}. You are now logged in as Admin.`);
+                        showActions();
+                    } else {
+                        // Regular user login via backend
+                        const loginResponse = await fetch('http://localhost:3000/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ userId, password: loginPassword }),
+                        }).then(res => res.json());
+
+                        if (loginResponse?.success) {
+                            loggedInUser = loginResponse.user;
+                            localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+                            appendOutput(`Welcome, ${loggedInUser.name}. You are now logged in.`);
+                            showActions();
+                        } else {
+                            appendOutput(`Login failed: ${loginResponse.error || "Unknown error"}`);
+                        }
+                    }
+                } catch (error) {
+                    appendOutput('Error during login. Please try again.');
+                    console.error("Login Error:", error);
+                }
+                break;
+
+            case 'logout':
+                loggedInUser = null;
+                localStorage.removeItem('loggedInUser');
+                appendOutput('Logged out successfully.');
+                showActions();
+                break;
+
+            case 'search_books':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+                const query = new URLSearchParams({ title: commandParts[1] }).toString();
+                const searchResults = await fetch(`http://localhost:3000/books/search?${query}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                }).then(res => res.json());
+
+                if (searchResults?.length === 0) {
+                    appendOutput('No books found matching your search.');
+                } else {
+                    appendOutput('Search results:');
+                    searchResults.forEach(book => {
+                        appendOutput(`ID: ${book.book_id}, Title: ${book.Title}, ISBN: ${book.isbn}, Edition: ${book.edition}, Publish Year: ${book.p_year}, Genre: ${book.Genre}, Status: ${book.status}`);
+                    });
+                }
+                break;
+
+            // case 'search_books':
+            //     if (!loggedInUser) {
+            //         appendOutput('Please login first.');
+            //         break;
+            //     }
+            //     const keyword = commandParts.slice(1).join(' ');
+            //     if (keyword.length === 13) {
+            //         const searchResults = await fetch('http://localhost:3000/books', {
+            //             method: 'POST',
+            //             headers: { 'Content-Type': 'application/json' },
+            //             body: JSON.stringify({ isbn }),
+            //         }).then(res => res.json());
+            //     }
+            //     if (searchResults?.length === 0) {
+            //         appendOutput('No books found matching your search.');
+            //     } else {
+            //         appendOutput('Search results:');
+            //         searchResults.forEach(book => {
+            //             appendOutput(`ID: ${book.id}, Title: ${book.title}, Author: ${book.author}`);
+            //         });
+            //     }
+            //     break;
+
+            case 'borrow_books':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+                if (commandParts.length !== 2) {
+                    appendOutput('Usage: borrow_books [bookID]');
+                    break;
+                }
+
+                const bookId = commandParts[1];
+
+                try {
+                    const borrowResponse = await sendRequest('http://localhost:3000/books/borrow', 'POST', { bookId, userId: loggedInUser.id });
+
+                    if (borrowResponse?.book && borrowResponse?.loan) {
+                        // Displaying the book and loan details
+                        appendOutput(borrowResponse.message);
+                        appendOutput(`Book Details: ID=${borrowResponse.book.book_id}, Title=${borrowResponse.book.title}, Status=${borrowResponse.book.status}`);
+                        appendOutput(`Loan Details: Loan ID=${borrowResponse.loan.l_id}, Borrow Date=${borrowResponse.loan.l_date}, Status=${borrowResponse.loan.status}`);
+                    } else {
+                        appendOutput(borrowResponse?.error || 'Failed to borrow book.');
+                    }
+                } catch (error) {
+                    console.error('Error in borrow_books:', error);
+                    appendOutput('An unexpected error occurred while borrowing the book.');
+                }
+                break;
+
+            case 'search_av':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+                const avQuery = new URLSearchParams({ title: commandParts[1] }).toString();
+                const avSearchResults = await fetch(`http://localhost:3000/av/search?${avQuery}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                }).then(res => res.json());
+                if (avSearchResults?.length === 0) {
+                    appendOutput('No audio-visual material found matching your search.');
+                } else {
+                    appendOutput('Search results:');
+                    avSearchResults.forEach(av => {
+                        appendOutput(`ID: ${av.av_id}, Title: ${av.Title}, ISAN: ${av.isan}, Publish Year: ${av.p_year}, Duration: ${av.duration}, Status: ${av.status}`);
+                    });
+                }
+                break;
+
+            case 'borrow_av':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+                if (commandParts.length < 2) {
+                    appendOutput('Usage: borrow_av [avID]');
+                    break;
+                }
+
+                const avId = commandParts.slice(1).join(' ');
+
+                try {
+                    const borrowResponse = await sendRequest('http://localhost:3000/av/borrow', 'POST', { avId, userId: loggedInUser.id });
+
+                    if (borrowResponse?.av && borrowResponse?.loan) {
+                        appendOutput(borrowResponse.message);
+                        appendOutput(`AV Details: ID=${borrowResponse.av.av_id}, Title=${borrowResponse.av.title}, Status=${borrowResponse.av.status}`);
+                        appendOutput(`Loan Details: Loan ID=${borrowResponse.loan.l_id}, Borrow Date=${borrowResponse.loan.l_date}, Status=${borrowResponse.loan.status}`);
+                    } else {
+                        appendOutput(borrowResponse?.error || 'Failed to borrow av.');
+                    }
+                } catch (error) {
+                    console.error('Error in borrow_av:', error);
+                    appendOutput('An unexpected error occurred while borrowing the av.');
+                }
+                break;
+            case 'reserve_discussion_rooms':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+                if (commandParts.length < 5) {
+                    appendOutput('Usage: reserve_discussion_rooms [discussion_roomID] [startDate startTime] [endDate endTime]');
+                    break;
+                }
+
+                const drId = commandParts[1];
+
+                // Extract start and end date-time inputs
+                const startTime = `${commandParts[2]} ${commandParts[3]}`;
+                const endTime = `${commandParts[4]} ${commandParts[5]}`;
+
+                // Check if date-time inputs are valid
+                if (isNaN(Date.parse(startTime)) || isNaN(Date.parse(endTime))) {
+                    appendOutput('Invalid date-time format. Use: YYYY-MM-DD HH:MM');
+                    break;
+                }
+
+                try {
+                    const reserveResponse = await sendRequest(
+                        'http://localhost:3000/discussion_rooms/reserve',
+                        'POST',
+                        { drId, userId: loggedInUser.id, startTime, endTime }
+                    );
+
+                    if (reserveResponse?.reservation) {
+                        appendOutput(reserveResponse.message);
+                        appendOutput(`Reservation Details: ID=${reserveResponse.reservation.dr_id}, Start=${reserveResponse.reservation.s_time}, End=${reserveResponse.reservation.e_time}`);
+                    } else {
+                        appendOutput(reserveResponse?.error || 'Failed to reserve discussion room.');
+                    }
+                } catch (error) {
+                    console.error('Error in reserve_discussion_rooms:', error);
+                    appendOutput('An unexpected error occurred while reserving the discussion room.');
+                }
+                break;
+
+            case 'view_discussion_rooms':
+                try {
+                    const roomsResponse = await sendRequest('http://localhost:3000/discussion_rooms', 'GET');
+
+                    if (roomsResponse?.length > 0) {
+                        appendOutput('Available Discussion Rooms:');
+                        roomsResponse.forEach(room => {
+                            appendOutput(`ID=${room.dr_id}, Status=${room.status}, Capacity=${room.capacity}, Library_ID=${room.library_id}`);
+                        });
+                    } else {
+                        appendOutput('No discussion rooms available.');
+                    }
+                } catch (error) {
+                    console.error('Error in view_discussion_rooms:', error);
+                    appendOutput('An unexpected error occurred while fetching discussion rooms.');
+                }
+                break;
+            case 'view_study_rooms':
+                try {
+                    const studyRoomsResponse = await sendRequest('http://localhost:3000/study_rooms', 'GET');
+
+                    if (studyRoomsResponse?.length > 0) {
+                        appendOutput('Available Study Rooms:');
+                        studyRoomsResponse.forEach(room => {
+                            appendOutput(`ID=${room.sr_id}, Capacity=${room.seat_qty}, Library_ID=${room.library_id}`);
+                        });
+                    } else {
+                        appendOutput('No study rooms available.');
+                    }
+                } catch (error) {
+                    console.error('Error in view_study_rooms:', error);
+                    appendOutput('An unexpected error occurred while fetching study rooms.');
+                }
+                break;
+            case 'view_seats':
+                if (commandParts.length < 2) {
+                    appendOutput('Usage: view_seats [roomID]');
+                    break;
+                }
+
+                const roomId = commandParts[1];
+
+                try {
+                    const seatsResponse = await sendRequest(`http://localhost:3000/study-rooms/${roomId}/seats`, 'GET');
+
+                    if (seatsResponse?.length > 0) {
+                        appendOutput(`Seats for Study Room ${roomId}:`);
+                        seatsResponse.forEach(seat => {
+                            appendOutput(`Seat ID=${seat.seat_id}, Status=${seat.status}`);
+                        });
+                    } else {
+                        appendOutput(`No seats found for Study Room ${roomId}.`);
+                    }
+                } catch (error) {
+                    console.error('Error in view_seats:', error);
+                    appendOutput('An unexpected error occurred while fetching seat information.');
+                }
+                break;
+            case 'submit_wishlist':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+                if (commandParts.length < 2) {
+                    appendOutput('Usage: submit_wishlist [isbn/isan]');
+                    break;
+                }
+
+                const isbnIsan = commandParts.slice(1).join(' ');
+                const currentDate = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+
+                try {
+                    const wishlistResponse = await sendRequest(
+                        'http://localhost:3000/wishlist/apply',
+                        'POST',
+                        { userId: loggedInUser.id, date: currentDate, isbnIsan }
+                    );
+
+                    if (wishlistResponse?.wish) {
+                        appendOutput(wishlistResponse.message);
+                        appendOutput(`Wishlist Details: Date=${wishlistResponse.wish.date}, ISBN/ISAN=${wishlistResponse.wish.isbn_isan}`);
+                    } else {
+                        appendOutput(wishlistResponse?.error || 'Failed to submit wishlist.');
+                    }
+                } catch (error) {
+                    console.error('Error in submit_wishlist:', error);
+                    appendOutput('An unexpected error occurred while submitting the wishlist.');
+                }
+                break;
+
+            case 'view_wishlist':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                try {
+                    const wishlistResponse = await sendRequest(
+                        `http://localhost:3000/wishlist?userId=${loggedInUser.id}`,
+                        'GET'
+                    );
+
+                    if (wishlistResponse?.length > 0) {
+                        appendOutput('Your Wishlist:');
+                        wishlistResponse.forEach(item => {
+                            appendOutput(`Date=${item.date}, ISBN/ISAN=${item.isbn_isan}, Status=${item.status || 'Pending'}`);
+                        });
+                    } else {
+                        appendOutput('Your wishlist is empty.');
+                    }
+                } catch (error) {
+                    console.error('Error in view_wishlist:', error);
+                    appendOutput('An unexpected error occurred while fetching your wishlist.');
+                }
+                break;
+
+            case 'search_active_fairs':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                try {
+                    const activeFairsResults = await fetch('http://localhost:3000/fairs/active', {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' },
+                    }).then(res => res.json());
+
+                    if (activeFairsResults?.length === 0) {
+                        appendOutput('No active book fairs found.');
+                    } else {
+                        appendOutput('Active book fairs:');
+                        activeFairsResults.forEach(fair => {
+                            appendOutput(`Name: ${fair.name}, Start Date: ${fair.s_date}, End Date: ${fair.e_date}`);
+                        });
+                    }
+                } catch (error) {
+                    console.error("Error fetching active fairs:", error);
+                    appendOutput("An error occurred while fetching active book fairs.");
+                }
+                break;
+
+            case 'search_fair_books':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (commandParts.length < 2) {
+                    appendOutput('Usage: search_fair_books [fairName]');
+                    break;
+                }
+
+                const fairName = commandParts.slice(1).join(' '); // Handles multi-word names
+
+                try {
+                    const booksResult = await fetch(`http://localhost:3000/fairs/${encodeURIComponent(fairName)}/books`, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' },
+                    }).then(res => res.json());
+
+                    if (booksResult?.length === 0) {
+                        appendOutput(`No books found for the "${fairName}" fair.`);
+                    } else {
+                        appendOutput(`Books in the "${fairName}" fair:`);
+                        booksResult.forEach(book => {
+                            appendOutput(`ID: ${book.book_id}, Title: ${book.title}, ISBN: ${book.isbn}, Edition: ${book.edition}, Publish Year: ${book.p_year}, Genre: ${book.Genre}, Status: ${book.status}`);
+                        });
+                    }
+                } catch (error) {
+                    console.error("Error fetching books for fair:", error);
+                    appendOutput(`An error occurred while fetching books for the "${fairName}" fair.`);
+                }
+                break;
+
+
+            default:
+                appendOutput('Unknown command. Type an action to perform.');
+                break;
+        }
+    }
+
+    async function sendRequest(endpoint, method, data) {
+        try {
+            const response = await fetch(endpoint, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: data ? JSON.stringify(data) : null,
+            });
+            return await response.json();
+        } catch (error) {
+            appendOutput('Error communicating with the server.');
+            console.error('Request Error:', error);
+        }
+    }
+
+    commandInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            const command = commandInput.value.trim();
+            appendOutput(`> ${command}`);
+            processCommand(command);
+            commandInput.value = '';
+        }
+    });
+    showActions();
+</script>
+
+</body>
+</html>

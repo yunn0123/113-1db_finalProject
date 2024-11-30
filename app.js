@@ -1,5 +1,6 @@
 const express = require("express");
-// const pool = require("./db");
+const jwt = require("jsonwebtoken");
+const pool = require("/Users/alexei/Desktop/NTUFiles/Library Information Systems/midterm/113-1db_finalProject/db/db.js");
 const { 
   newBook, // 新增書籍
   newFair, // 新增書展
@@ -35,13 +36,66 @@ const {
 } = require('./db/admin.js'); // 引入 admin.js 中的函數
 const app = express();
 const cors = require('cors'); // 引入 cors
-
+const JWT_SECRET = "ultra_jwt_secret_key_hehe";
 app.use(cors());
 app.use(express.json()); // 解析 JSON 請求
 
 // 根路徑
 app.get("/", (req, res) => {
   res.send("Welcome to the Library Management System API");
+});
+
+app.post("/login", async (req, res) => {
+    const userId = req.body.userId || req.query.userId; // Check both body and query
+    const password = req.body.password || req.query.password;
+
+    console.log(userId);
+    // Validate input
+    if (!userId || !password) {
+        return res.status(400).json({ error: "Missing userId or password" });
+    }
+
+    try {
+        // Fetch user record from the database
+        const userResult = await pool.query(
+            'SELECT * FROM "user" WHERE u_id = $1',
+            [userId]
+        );
+
+        if (userResult.rowCount === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const user = userResult.rows[0];
+
+        // Compare provided password with the stored plaintext password
+        if (password !== user.password) {
+            console.log("Invalid password");
+            return res.status(401).json({ error: "Invalid credentials" });
+        }
+
+        // Generate a JWT token
+        const token = jwt.sign(
+            { userId: user.u_id, name: user.u_name },
+            JWT_SECRET,
+            { expiresIn: "1h" } // Token validity duration
+        );
+
+        res.json({
+            success: true,
+            message: "Login successful",
+            token,
+            user: {
+                id: user.u_id,
+                name: user.u_name,
+                department: user.department,
+                degree: user.degree,
+            },
+        });
+    } catch (err) {
+        console.error("Error during login:", err);
+        res.status(500).json({ error: "Failed to login. Please try again later." });
+    }
 });
 
 // 查詢書籍（按標題過濾）
@@ -63,7 +117,6 @@ app.get("/books/search", async (req, res) => {
 // 借閱書籍
 app.post("/books/borrow", async (req, res) => {
   const { bookId, userId } = req.body;
-
   // 檢查是否提供必要參數
   if (!bookId || !userId) {
     return res.status(400).json({ error: "Missing bookId or userId" });
@@ -94,9 +147,10 @@ app.post("/books/borrow", async (req, res) => {
     // 提交交易
     await pool.query("COMMIT");
     res.json({
-      message: "Book borrowed successfully",
-      book: bookResult.rows[0],
-      loan: loanResult.rows[0],
+        success: true,
+        message: "Book borrowed successfully",
+        book: bookResult.rows[0],
+        loan: loanResult.rows[0],
     });
   } catch (err) {
     await pool.query("ROLLBACK"); // 發生錯誤時回滾交易
@@ -109,8 +163,7 @@ app.post("/books/borrow", async (req, res) => {
 
 // 查詢書籍資料（根據書籍 ID 或 ISBN）
 app.get("/books", async (req, res) => {
-  const { bookId, isbn } = req.query;
-
+  const { bookId, isbn } = req.body;
   try {
     let query = 'SELECT * FROM books WHERE 1=1';
     const values = [];
@@ -278,7 +331,7 @@ app.get("/discussion_rooms", async (req, res) => {
 });
 
 // 查詢所有自習室
-app.get("/study-rooms", async (req, res) => {
+app.get("/study_rooms", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM study_room");
     res.json(result.rows);
@@ -460,10 +513,9 @@ app.post("/users", async (req, res) => {
     enrollYear,
     grade,
     enrollmentStatus,
-    password,
+    password
   } = req.body;
   try {
-
     await pool.query("BEGIN"); // 開始交易
     const result = await pool.query(
       'INSERT INTO "user" (u_id, u_name, gender, department, degree, enroll_year, grade, enrollment_status, password) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
