@@ -21,8 +21,8 @@ const queries = {
     updateBookStatus: 'UPDATE books SET status = $1 WHERE book_id = $2',
     updateAVStatus: 'UPDATE av_material SET status = $1 WHERE av_id = $2',
     // 歸還書籍
-    returnBook: "UPDATE book_loan SET r_date = CURRENT_DATE WHERE book_id = $1 and u_id = $2 RETURN esti_r_date, r_date",
-    returnAV: "UPDATE av_loan SET r_date = CURRENT_DATE WHERE av_id = $1 and u_id = $2 RETURN esti_r_date, r_date",
+    returnBook: "UPDATE book_loan SET r_date = CURRENT_DATE WHERE book_id = $1 and u_id = $2 RETURNING esti_r_date, r_date",
+    returnAV: "UPDATE av_loan SET r_date = CURRENT_DATE WHERE av_id = $1 and u_id = $2 RETURNING esti_r_date, r_date",
     // 自動更新借閱狀態(for 逾期未歸還)
     updateOverdueBookLoan: "UPDATE book_loan SET status = '逾期未歸還' WHERE r_date IS NULL AND status = '未歸還' AND esti_r_date < CURRENT_DATE ",
     updateOverdueAVLoan: "UPDATE av_loan SET status = '逾期未歸還' WHERE r_date IS NULL AND status = '未歸還' AND esti_r_date < CURRENT_DATE ", 
