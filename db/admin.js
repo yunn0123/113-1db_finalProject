@@ -134,15 +134,16 @@ const newBookAcq = async (a_date, status, isbn, cost, supplier) => {
 };
 
 const newAVAcq = async (a_date, status, isan, cost, supplier) => {
-    db.query(queries.newAVAcq, [a_date, status, isan, cost, supplier], (err, res) => {
-        if (err) {
-            callback(err, null);
-            console.log('新增影音採買紀錄失敗');
-        } else {
-            callback(null, res.rows);
-            console.log('新增影音採買紀錄成功');
-        }
-    });
+    try{
+        await db.query('BEGIN');
+        const res = await db.query(queries.newAVAcq, [a_date, status, isan, cost, supplier]);
+        console.log('新增影音採買紀錄成功');
+        await db.query('COMMIT');
+    } catch (error) {
+        await db.query('ROLLBACK'); // 發生錯誤時回滾
+        console.error('新增影音採買紀錄失敗:', error.message);
+        throw error; // 將錯誤拋出以供上層處理
+    }
 };
 
 // WHERE book_id
