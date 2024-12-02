@@ -26,9 +26,6 @@
             color: #61dafb;
             outline: none;
         }
-        .command-text {
-            color: #9cdcfe;
-        }
     </style>
 </head>
 <body>
@@ -63,8 +60,36 @@
                 actions += `</div>12. search_fair_books [fairName]</div>`;
                 actions += `<div>11. logout</div>`;
             } else if (loggedInUser.role === "admin") {
-                actions += `<div>1. acquire_book [title] [author]</div>`;
-                actions += `<div>2. logout</div>`;
+                actions += `<div>1. new_fair [Fair Name] [Start Date] [End Date]</div>`;
+                actions += `<div>1. new_book [title] [isbn] [edition] [publish_year] [genre] [status] [author]</div>`;
+                actions += `<div>1. new_av [title] [isan] [status] [publishYear] [duration] [author]</div>`;
+                actions += `<div>1. new_book_acq [acquisitionDate] [status] [isbn] [cost] [supplier]</div>`;
+                actions += `<div>1. new_av_acq [acquisitionDate] [status] [isan] [cost] [supplier]</div>`;
+                actions += `<div>1. update_book [title] [isbn] [edition] [publishYear] [genre] [bookID]</div>`;
+                actions += `<div>1. update_av [title] [isan] [publishYear] [duration] [avID]</div>`;
+                actions += `<div>1. delete_book [bookID]</div>`;
+                actions += `<div>1. delete_av [avID]</div>`;
+                actions += `<div>1. update_book_status [status] [bookID]</div>`;
+                actions += `<div>1. update_av_status [status] [avID]</div>`;
+                actions += `<div>1. return_book [bookID]</div>`;
+                actions += `<div>1. return_av [avID]</div>`;
+                actions += `<div>1. update_overdue_book_loans</div>`;
+                actions += `<div>1. update_overdue_av_loans</div>`;
+                actions += `<div>1. rating_book [rating] [book_id] [user_id]</div>`;
+                actions += `<div>1. rating_av [rating] [av_id] [user_id]</div>`;
+                actions += `<div>1. update_fair_start_date [fair_id] [start_date]</div>`;
+                actions += `<div>2. update_fair_end_date [fair_id] [end_date]</div>`;
+                actions += `<div>3. get_book_loans_by_user [user_id]</div>`;
+                actions += `<div>4. get_av_loans_by_user [user_id]</div>`;
+                actions += `<div>5. get_books_by_time [start_date] [end_date]</div>`;
+                actions += `<div>6. get_av_by_time [start_date] [end_date]</div>`;
+                actions += `<div>7. get_books_by_status [status]</div>`;
+                actions += `<div>8. get_av_by_status [status]</div>`;
+                actions += `<div>9. get_fixing_discussion_room</div>`;
+                actions += `<div>10. get_fixing_seats</div>`;
+                actions += `<div>11. update_discussion_room_status [status] [room_id]</div>`;
+                actions += `<div>12. update_seat_status [status] [seat_id]</div>`;
+                actions += `<div>13. logout</div>`;
             }
             appendOutput(actions, true);
         }, 500);
@@ -133,8 +158,8 @@
                     break;
                 }
 
-                const userId = commandParts[1];
-                const loginPassword = commandParts[2];
+                userId = commandParts[1];
+                loginPassword = commandParts[2];
 
                 // Admin credentials (stored in frontend)
                 const ADMIN_ID = "admin";
@@ -231,7 +256,7 @@
                     break;
                 }
 
-                const bookId = commandParts[1];
+                bookId = commandParts[1];
 
                 try {
                     const borrowResponse = await sendRequest('http://localhost:3000/books/borrow', 'POST', { bookId, userId: loggedInUser.id });
@@ -280,7 +305,7 @@
                     break;
                 }
 
-                const avId = commandParts.slice(1).join(' ');
+                avId = commandParts.slice(1).join(' ');
 
                 try {
                     const borrowResponse = await sendRequest('http://localhost:3000/av/borrow', 'POST', { avId, userId: loggedInUser.id });
@@ -491,7 +516,7 @@
                     break;
                 }
 
-                const fairName = commandParts.slice(1).join(' '); // Handles multi-word names
+                let fairName = commandParts.slice(1).join(' '); // Handles multi-word names
 
                 try {
                     const booksResult = await fetch(`http://localhost:3000/fairs/${encodeURIComponent(fairName)}/books`, {
@@ -513,6 +538,1081 @@
                 }
                 break;
 
+            case 'new_fair':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length < 4) {
+                    appendOutput('Usage: new_fair [Fair Name] [Start Date] [End Date]');
+                    break;
+                }
+
+                const FairName = commandParts[1]; // Extract fair name
+                const s_date = commandParts[2];  // Extract start date
+                const e_date = commandParts[3];  // Extract end date
+                const books = [];                // Initialize books array
+
+                appendOutput('Enter books for the fair in the following format:');
+                appendOutput('Title, book_id');
+                appendOutput('Type "done" when you are finished entering books.');
+
+                let doneEnteringBooks = false;
+
+                // Listen for book input dynamically
+                while (!doneEnteringBooks) {
+                    const bookInput = await getInput(); // Custom function to fetch user input
+                    if (bookInput.toLowerCase() === 'done') {
+                        doneEnteringBooks = true;
+                    } else {
+                        const bookParts = bookInput.split(',').map(part => part.trim());
+                        if (bookParts.length !== 2) {
+                            appendOutput('Invalid book format. Please provide all fields:');
+                            appendOutput('Title, book_id');
+                        } else {
+                            const [title, isbn, edition, publishYear, genre, status] = bookParts;
+                            books.push({ title, isbn, edition, p_year: publishYear, genre, status });
+                            appendOutput(`Added book: ${title}`);
+                        }
+                    }
+                }
+
+                try {
+                    const response = await fetch('http://localhost:3000/newFair', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: FairName, s_date, e_date, books }),
+                    }).then(res => res.json());
+
+                    if (response?.message) {
+                        appendOutput(response.message);
+                        appendOutput(`Rows updated: ${response.updatedRows || 0}`);
+                    } else {
+                        appendOutput('Failed to add new fair. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Error adding new fair:', error);
+                    appendOutput('An error occurred while adding the new fair.');
+                }
+                break;
+
+            case 'new_book':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 8) {
+                    appendOutput('Usage: new_book [title] [isbn] [edition] [publish_year] [genre] [status] [author]');
+                    break;
+                }
+                title = commandParts [1];
+                isbn = commandParts[2];
+                edition = commandParts[3];
+                publishYear = commandParts[4];
+                genre = commandParts[5];
+                status = commandParts[6];
+                author = commandParts[7];
+                //new_book MyAss 1234567890123 1 2024 erotic 在架 妳媽
+                appendOutput(edition);
+                try {
+                const addBookResponse = await sendRequest(
+                    'http://localhost:3000/newBook',
+                    'POST',
+                    { title, isbn, edition, publishYear, genre, status, author },
+                );
+
+                    if (addBookResponse?.message) {
+                        appendOutput(addBookResponse.message);
+                        appendOutput(`Updated Rows: ${addBookResponse.updatedRows || 0}`);
+                    } else {
+                        appendOutput(addBookResponse?.error || 'Failed to add new book.');
+                    }
+                } catch (error) {
+                    console.error('Error in new_book:', error);
+                    appendOutput('An unexpected error occurred while adding the book.');
+                }
+                break;
+
+            case 'new_av':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 7) {
+                    appendOutput('Usage: new_av [title] [isan] [status] [publishYear] [duration] [author]');
+                    break;
+                }
+                title = commandParts [1];
+                isan = commandParts[2];
+                status = commandParts[3];
+                publishYear = commandParts[4];
+                duration = commandParts[5];
+                author = commandParts[6];
+                appendOutput(author);
+                //new_av MyAss 1234567890123 在架 2024 01:02:03 妳媽
+                try {
+                    const addAVResponse = await sendRequest(
+                        'http://localhost:3000/newAV',
+                        'POST',
+                        { title, isan, status, p_year: publishYear, duration, author },
+                    );
+
+                    if (addAVResponse?.message) {
+                        appendOutput(addAVResponse.message);
+                        appendOutput(`Updated Rows: ${addAVResponse.updatedRows || 0}`);
+                    } else {
+                        appendOutput(addAVResponse?.error || 'Failed to add new audio-visual material.');
+                    }
+                } catch (error) {
+                    console.error('Error in new_av:', error);
+                    appendOutput('An unexpected error occurred while adding the audio-visual material.');
+                }
+                break;
+
+            case 'new_book_acq':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 6) {
+                    appendOutput('Usage: new_book_acq [acquisitionDate] [status] [isbn] [cost] [supplier]');
+                    break;
+                }
+
+                [acquisitionDate, status, isbn, cost, supplier] = commandParts.slice(1);
+
+                try {
+                    const addBookAcqResponse = await sendRequest(
+                        'http://localhost:3000/newBookAcq',
+                        'POST',
+                        { a_date: acquisitionDate, status, isbn, cost, supplier },
+                    );
+
+                    if (addBookAcqResponse?.message) {
+                        appendOutput(addBookAcqResponse.message);
+                        appendOutput(`Updated Rows: ${addBookAcqResponse.updatedRows || 0}`);
+                    } else {
+                        appendOutput(addBookAcqResponse?.error || 'Failed to add new book acquisition.');
+                    }
+                } catch (error) {
+                    console.error('Error in new_book_acq:', error);
+                    appendOutput('An unexpected error occurred while adding the book acquisition.');
+                }
+                break;
+
+            case 'new_av_acq':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 6) {
+                    appendOutput('Usage: new_av_acq [acquisitionDate] [status] [isan] [cost] [supplier]');
+                    break;
+                }
+
+                [acquisitionDate, status, isan, cost, supplier] = commandParts.slice(1);
+
+                try {
+                    const addAVAcqResponse = await sendRequest(
+                        'http://localhost:3000/newAVAcq',
+                        'POST',
+                        { a_date: acquisitionDate, status, isan, cost, supplier },
+                    );
+
+                    if (addAVAcqResponse?.message) {
+                        appendOutput(addAVAcqResponse.message);
+                        appendOutput(`Updated Rows: ${addAVAcqResponse.updatedRows || 0}`);
+                    } else {
+                        appendOutput(addAVAcqResponse?.error || 'Failed to add new AV acquisition.');
+                    }
+                } catch (error) {
+                    console.error('Error in new_av_acq:', error);
+                    appendOutput('An unexpected error occurred while adding the AV acquisition.');
+                }
+                break;
+
+            case 'update_book':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 7) {
+                    appendOutput('Usage: update_book [title] [isbn] [edition] [publishYear] [genre] [bookID]');
+                    break;
+                }
+
+                [title, isbn, edition, publishYear, genre, bookID] = commandParts.slice(1);
+
+                try {
+                    const updateBookResponse = await sendRequest(
+                        'http://localhost:3000/updateBook',
+                        'POST',
+                        { title, isbn, edition, p_year: publishYear, genre, book_id: bookID },
+                    );
+
+                    if (updateBookResponse?.message) {
+                        appendOutput(updateBookResponse.message);
+                    } else {
+                        appendOutput(updateBookResponse?.error || 'Failed to update book.');
+                    }
+                } catch (error) {
+                    console.error('Error in update_book:', error);
+                    appendOutput('An unexpected error occurred while updating the book.');
+                }
+                break;
+
+            case 'update_av':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 6) {
+                    appendOutput('Usage: update_av [title] [isan] [publishYear] [duration] [avID]');
+                    break;
+                }
+
+                [title, isan, publishYear, duration, avID] = commandParts.slice(1);
+
+                try {
+                    const updateAVResponse = await sendRequest(
+                        'http://localhost:3000/updateAV',
+                        'PUT',
+                        { title, isan, p_year: publishYear, duration, av_id: avID },
+                    );
+
+                    if (updateAVResponse?.message) {
+                        appendOutput(updateAVResponse.message);
+                        appendOutput(`Updated Rows: ${updateAVResponse.updatedRows || 0}`);
+                    } else {
+                        appendOutput(updateAVResponse?.error || 'Failed to update AV material.');
+                    }
+                } catch (error) {
+                    console.error('Error in update_av:', error);
+                    appendOutput('An unexpected error occurred while updating the AV material.');
+                }
+                break;
+
+            case 'delete_book':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 2) {
+                    appendOutput('Usage: delete_book [bookID]');
+                    break;
+                }
+
+                bookID = commandParts[1];
+
+                try {
+                    const deleteBookResponse = await sendRequest(
+                        'http://localhost:3000/deleteBook',
+                        'PUT',
+                        { book_id: bookID },
+                    );
+
+                    if (deleteBookResponse?.message) {
+                        appendOutput(deleteBookResponse.message);
+                        appendOutput(`Updated Rows: ${deleteBookResponse.updatedRows || 0}`);
+                    } else {
+                        appendOutput(deleteBookResponse?.error || 'Failed to delete book.');
+                    }
+                } catch (error) {
+                    console.error('Error in delete_book:', error);
+                    appendOutput('An unexpected error occurred while deleting the book.');
+                }
+                break;
+
+            case 'delete_av':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 2) {
+                    appendOutput('Usage: delete_av [avID]');
+                    break;
+                }
+
+                avID = commandParts[1];
+
+                try {
+                    const deleteAVResponse = await sendRequest(
+                        'http://localhost:3000/deleteAV',
+                        'PUT',
+                        { av_id: avID },
+                    );
+
+                    if (deleteAVResponse?.message) {
+                        appendOutput(deleteAVResponse.message);
+                        appendOutput(`Updated Rows: ${deleteAVResponse.updatedRows || 0}`);
+                    } else {
+                        appendOutput(deleteAVResponse?.error || 'Failed to delete AV material.');
+                    }
+                } catch (error) {
+                    console.error('Error in delete_av:', error);
+                    appendOutput('An unexpected error occurred while deleting the AV material.');
+                }
+                break;
+
+            case 'update_book_status':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 3) {
+                    appendOutput('Usage: update_book_status [status] [bookID]');
+                    break;
+                }
+
+                [bookStatus, bookID] = commandParts.slice(1);
+
+                try {
+                    const updateBookStatusResponse = await sendRequest(
+                        'http://localhost:3000/updateBookStatus',
+                        'PUT',
+                        { status: bookStatus, book_id: bookID },
+                    );
+
+                    if (updateBookStatusResponse?.message) {
+                        appendOutput(updateBookStatusResponse.message);
+                        appendOutput(`Updated Rows: ${updateBookStatusResponse.updatedRows || 0}`);
+                    } else {
+                        appendOutput(updateBookStatusResponse?.error || 'Failed to update book status.');
+                    }
+                } catch (error) {
+                    console.error('Error in update_book_status:', error);
+                    appendOutput('An unexpected error occurred while updating the book status.');
+                }
+                break;
+
+            case 'update_av_status':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 3) {
+                    appendOutput('Usage: update_av_status [status] [avID]');
+                    break;
+                }
+
+                [avStatus, avID] = commandParts.slice(1);
+
+                try {
+                    const updateAVStatusResponse = await sendRequest(
+                        'http://localhost:3000/updateAVStatus',
+                        'PUT',
+                        { status: avStatus, av_id: avID },
+                    );
+
+                    if (updateAVStatusResponse?.message) {
+                        appendOutput(updateAVStatusResponse.message);
+                        appendOutput(`Updated Rows: ${updateAVStatusResponse.updatedRows || 0}`);
+                    } else {
+                        appendOutput(updateAVStatusResponse?.error || 'Failed to update AV status.');
+                    }
+                } catch (error) {
+                    console.error('Error in update_av_status:', error);
+                    appendOutput('An unexpected error occurred while updating the AV status.');
+                }
+                break;
+
+            case 'return_book':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (commandParts.length !== 2) {
+                    appendOutput('Usage: return_book [bookID]');
+                    break;
+                }
+
+                returnBookID = commandParts[1];
+
+                try {
+                    const returnBookResponse = await sendRequest(
+                        'http://localhost:3000/returnBook',
+                        'PUT',
+                        { book_id: returnBookID, u_id: loggedInUser.id },
+                    );
+
+                    if (returnBookResponse?.message) {
+                        appendOutput(returnBookResponse.message);
+                        appendOutput(`Updated Rows: ${returnBookResponse.updatedRows || 0}`);
+                    } else {
+                        appendOutput(returnBookResponse?.error || 'Failed to return the book.');
+                    }
+                } catch (error) {
+                    console.error('Error in return_book:', error);
+                    appendOutput('An unexpected error occurred while returning the book.');
+                }
+                break;
+
+            case 'return_av':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (commandParts.length !== 2) {
+                    appendOutput('Usage: return_av [avID]');
+                    break;
+                }
+
+                returnAVID = commandParts[1];
+
+                try {
+                    const returnAVResponse = await sendRequest(
+                        'http://localhost:3000/returnAV',
+                        'PUT',
+                        { av_id: returnAVID, u_id: loggedInUser.id },
+                    );
+
+                    if (returnAVResponse?.message) {
+                        appendOutput(returnAVResponse.message);
+                        appendOutput(`Updated Rows: ${returnAVResponse.updatedRows || 0}`);
+                    } else {
+                        appendOutput(returnAVResponse?.error || 'Failed to return the AV material.');
+                    }
+                } catch (error) {
+                    console.error('Error in return_av:', error);
+                    appendOutput('An unexpected error occurred while returning the AV material.');
+                }
+                break;
+
+            case 'update_overdue_book_loans':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                try {
+                    const overdueBookLoanResponse = await sendRequest(
+                        'http://localhost:3000/updateOverdueBookLoan',
+                        'PUT'
+                    );
+
+                    if (overdueBookLoanResponse?.message) {
+                        appendOutput(overdueBookLoanResponse.message);
+                        appendOutput(`Updated Rows: ${overdueBookLoanResponse.updatedRows || 0}`);
+                    } else {
+                        appendOutput(overdueBookLoanResponse?.error || 'Failed to update overdue book loans.');
+                    }
+                } catch (error) {
+                    console.error('Error in update_overdue_book_loans:', error);
+                    appendOutput('An unexpected error occurred while updating overdue book loans.');
+                }
+                break;
+
+            case 'update_overdue_av_loans':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                try {
+                    const overdueAVLoanResponse = await sendRequest(
+                        'http://localhost:3000/updateOverDueAVLoan',
+                        'PUT'
+                    );
+
+                    if (overdueAVLoanResponse?.message) {
+                        appendOutput(overdueAVLoanResponse.message);
+                        appendOutput(`Updated Rows: ${overdueAVLoanResponse.updatedRows || 0}`);
+                    } else {
+                        appendOutput(overdueAVLoanResponse?.error || 'Failed to update overdue AV loans.');
+                    }
+                } catch (error) {
+                    console.error('Error in update_overdue_av_loans:', error);
+                    appendOutput('An unexpected error occurred while updating overdue AV loans.');
+                }
+                break;
+
+            case 'rating_book':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (commandParts.length !== 4) {
+                    appendOutput('Usage: rating_book [rating] [book_id] [user_id]');
+                    break;
+                }
+
+                rating = commandParts[1];
+                bookId = commandParts[2];
+                userId = commandParts[3];
+
+                try {
+                    const ratingBookResponse = await sendRequest(
+                        'http://localhost:3000/ratingBook',
+                        'PUT',
+                        { rating, book_id: bookId, u_id: userId }
+                    );
+
+                    if (ratingBookResponse?.message) {
+                        appendOutput(ratingBookResponse.message);
+                        appendOutput(`Updated Rows: ${ratingBookResponse.updatedRows || 0}`);
+                    } else {
+                        appendOutput(ratingBookResponse?.error || 'Failed to rate the book.');
+                    }
+                } catch (error) {
+                    console.error('Error in rating_book:', error);
+                    appendOutput('An unexpected error occurred while rating the book.');
+                }
+                break;
+
+            case 'rating_av':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (commandParts.length !== 4) {
+                    appendOutput('Usage: rating_av [rating] [av_id] [user_id]');
+                    break;
+                }
+
+                avRating = commandParts[1];
+                avId = commandParts[2];
+                avUserId = commandParts[3];
+
+                try {
+                    const ratingAVResponse = await sendRequest(
+                        'http://localhost:3000/ratingAV',
+                        'PUT',
+                        { rating: avRating, av_id: avId, u_id: avUserId }
+                    );
+
+                    if (ratingAVResponse?.message) {
+                        appendOutput(ratingAVResponse.message);
+                        appendOutput(`Updated Rows: ${ratingAVResponse.updatedRows || 0}`);
+                    } else {
+                        appendOutput(ratingAVResponse?.error || 'Failed to rate the AV.');
+                    }
+                } catch (error) {
+                    console.error('Error in rating_av:', error);
+                    appendOutput('An unexpected error occurred while rating the AV.');
+                }
+                break;
+
+            case 'update_fair_start_date':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 3) {
+                    appendOutput('Usage: update_fair_start_date [fair_id] [start_date]');
+                    break;
+                }
+
+                fairId = commandParts[1];
+                startDate = commandParts[2];
+
+                try {
+                    const updateFairStartDateResponse = await sendRequest(
+                        'http://localhost:3000/updateFairStartDate',
+                        'PUT',
+                        { fair_id: fairId, s_date: startDate }
+                    );
+
+                    if (updateFairStartDateResponse?.message) {
+                        appendOutput(updateFairStartDateResponse.message);
+                        appendOutput(`Updated Rows: ${updateFairStartDateResponse.updatedRows || 0}`);
+                    } else {
+                        appendOutput(updateFairStartDateResponse?.error || 'Failed to update fair start date.');
+                    }
+                } catch (error) {
+                    console.error('Error in update_fair_start_date:', error);
+                    appendOutput('An unexpected error occurred while updating the fair start date.');
+                }
+                break;
+
+            case 'update_fair_end_date':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 3) {
+                    appendOutput('Usage: update_fair_end_date [fair_id] [end_date]');
+                    break;
+                }
+
+                fairEndId = commandParts[1];
+                endDate = commandParts[2];
+
+                try {
+                    const updateFairEndDateResponse = await sendRequest(
+                        'http://localhost:3000/updateFairEndDate',
+                        'PUT',
+                        { fair_id: fairEndId, e_date: endDate }
+                    );
+
+                    if (updateFairEndDateResponse?.message) {
+                        appendOutput(updateFairEndDateResponse.message);
+                        appendOutput(`Updated Rows: ${updateFairEndDateResponse.updatedRows || 0}`);
+                    } else {
+                        appendOutput(updateFairEndDateResponse?.error || 'Failed to update fair end date.');
+                    }
+                } catch (error) {
+                    console.error('Error in update_fair_end_date:', error);
+                    appendOutput('An unexpected error occurred while updating the fair end date.');
+                }
+                break;
+
+            case 'get_book_loans_by_user':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 2) {
+                    appendOutput('Usage: get_book_loans_by_user [user_id]');
+                    break;
+                }
+
+                userId = commandParts[1];
+
+                try {
+                    const getBookLoansResponse = await sendRequest(
+                        `http://localhost:3000/getBookLoansByUser?u_id=${userId}`,
+                        'GET'
+                    );
+
+                    if (getBookLoansResponse?.length > 0) {
+                        appendOutput('Book loan records for user:');
+                        getBookLoansResponse.forEach(loan => {
+                            appendOutput(`Book ID: ${loan.book_id}, Loan Date: ${loan.loan_date}, Due Date: ${loan.due_date}`);
+                        });
+                    } else {
+                        appendOutput('No book loans found for this user.');
+                    }
+                } catch (error) {
+                    console.error('Error in get_book_loans_by_user:', error);
+                    appendOutput('An unexpected error occurred while fetching book loans.');
+                }
+                break;
+
+            case 'get_av_loans_by_user':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 2) {
+                    appendOutput('Usage: get_av_loans_by_user [user_id]');
+                    break;
+                }
+
+                avUserId = commandParts[1];
+
+                try {
+                    const getAVLoansResponse = await sendRequest(
+                        `http://localhost:3000/getAVLoansByUser?u_id=${avUserId}`,
+                        'GET'
+                    );
+
+                    if (getAVLoansResponse?.length > 0) {
+                        appendOutput('AV loan records for user:');
+                        getAVLoansResponse.forEach(loan => {
+                            appendOutput(`AV ID: ${loan.av_id}, Loan Date: ${loan.loan_date}, Due Date: ${loan.due_date}`);
+                        });
+                    } else {
+                        appendOutput('No AV loans found for this user.');
+                    }
+                } catch (error) {
+                    console.error('Error in get_av_loans_by_user:', error);
+                    appendOutput('An unexpected error occurred while fetching AV loans.');
+                }
+                break;
+
+            case 'get_books_by_time':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 3) {
+                    appendOutput('Usage: get_books_by_time [start_date] [end_date]');
+                    break;
+                }
+
+                startDate = commandParts[1];
+                endDate = commandParts[2];
+
+                try {
+                    const getBooksByTimeResponse = await sendRequest(
+                        `http://localhost:3000/getBookByTime?start_date=${startDate}&end_date=${endDate}`,
+                        'GET'
+                    );
+
+                    if (getBooksByTimeResponse?.length > 0) {
+                        appendOutput('Books between the specified dates:');
+                        getBooksByTimeResponse.forEach(book => {
+                            appendOutput(`Book ID: ${book.book_id}, Title: ${book.title}, Date Added: ${book.date_added}`);
+                        });
+                    } else {
+                        appendOutput('No books found within this date range.');
+                    }
+                } catch (error) {
+                    console.error('Error in get_books_by_time:', error);
+                    appendOutput('An unexpected error occurred while fetching books.');
+                }
+                break;
+
+            case 'get_av_by_time':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 3) {
+                    appendOutput('Usage: get_av_by_time [start_date] [end_date]');
+                    break;
+                }
+
+                avStartDate = commandParts[1];
+                avEndDate = commandParts[2];
+
+                try {
+                    const getAVByTimeResponse = await sendRequest(
+                        `http://localhost:3000/getAVByTime?start_date=${avStartDate}&end_date=${avEndDate}`,
+                        'GET'
+                    );
+
+                    if (getAVByTimeResponse?.length > 0) {
+                        appendOutput('AVs between the specified dates:');
+                        getAVByTimeResponse.forEach(av => {
+                            appendOutput(`AV ID: ${av.av_id}, Title: ${av.title}, Date Added: ${av.date_added}`);
+                        });
+                    } else {
+                        appendOutput('No AVs found within this date range.');
+                    }
+                } catch (error) {
+                    console.error('Error in get_av_by_time:', error);
+                    appendOutput('An unexpected error occurred while fetching AVs.');
+                }
+                break;
+
+            case 'get_books_by_status':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 2) {
+                    appendOutput('Usage: get_books_by_status [status]');
+                    break;
+                }
+
+                status = commandParts[1];
+
+                try {
+                    const getBooksByStatusResponse = await sendRequest(
+                        `http://localhost:3000/getBookByStatus?status=${status}`,
+                        'GET'
+                    );
+
+                    if (getBooksByStatusResponse?.length > 0) {
+                        appendOutput(`Books with status '${status}':`);
+                        getBooksByStatusResponse.forEach(book => {
+                            appendOutput(`Book ID: ${book.book_id}, Title: ${book.title}, Status: ${book.status}`);
+                        });
+                    } else {
+                        appendOutput(`No books found with status '${status}'.`);
+                    }
+                } catch (error) {
+                    console.error('Error in get_books_by_status:', error);
+                    appendOutput('An unexpected error occurred while fetching books.');
+                }
+                break;
+
+            case 'get_av_by_status':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 2) {
+                    appendOutput('Usage: get_av_by_status [status]');
+                    break;
+                }
+
+                avStatus = commandParts[1];
+
+                try {
+                    const getAVByStatusResponse = await sendRequest(
+                        `http://localhost:3000/getAVByStatus?status=${avStatus}`,
+                        'GET'
+                    );
+
+                    if (getAVByStatusResponse?.length > 0) {
+                        appendOutput(`AVs with status '${avStatus}':`);
+                        getAVByStatusResponse.forEach(av => {
+                            appendOutput(`AV ID: ${av.av_id}, Title: ${av.title}, Status: ${av.status}`);
+                        });
+                    } else {
+                        appendOutput(`No AVs found with status '${avStatus}'.`);
+                    }
+                } catch (error) {
+                    console.error('Error in get_av_by_status:', error);
+                    appendOutput('An unexpected error occurred while fetching AVs.');
+                }
+                break;
+
+            case 'get_fixing_discussion_room':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                try {
+                    const getFixingDiscussionRoomResponse = await sendRequest(
+                        'http://localhost:3000/getFixingDiscussionRoom',
+                        'GET'
+                    );
+
+                    if (getFixingDiscussionRoomResponse?.length > 0) {
+                        appendOutput('Fixing Discussion Rooms:');
+                        getFixingDiscussionRoomResponse.forEach(room => {
+                            appendOutput(`Room ID: ${room.room_id}, Room Name: ${room.room_name}, Status: ${room.status}`);
+                        });
+                    } else {
+                        appendOutput('No fixing discussion rooms found.');
+                    }
+                } catch (error) {
+                    console.error('Error in get_fixing_discussion_room:', error);
+                    appendOutput('An unexpected error occurred while fetching the fixing discussion rooms.');
+                }
+                break;
+
+            case 'get_fixing_seats':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                try {
+                    const getFixingSeatsResponse = await sendRequest(
+                        'http://localhost:3000/getFixingSeats',
+                        'GET'
+                    );
+
+                    if (getFixingSeatsResponse?.length > 0) {
+                        appendOutput('Fixing Seats:');
+                        getFixingSeatsResponse.forEach(seat => {
+                            appendOutput(`Seat ID: ${seat.seat_id}, Seat Name: ${seat.seat_name}, Status: ${seat.status}`);
+                        });
+                    } else {
+                        appendOutput('No fixing seats found.');
+                    }
+                } catch (error) {
+                    console.error('Error in get_fixing_seats:', error);
+                    appendOutput('An unexpected error occurred while fetching the fixing seats.');
+                }
+                break;
+
+            case 'update_discussion_room_status':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 3) {
+                    appendOutput('Usage: update_discussion_room_status [status] [room_id]');
+                    break;
+                }
+
+                status  = commandParts[1];
+                room_id  = commandParts[2];
+
+                try {
+                    const updateDiscussionRoomStatusResponse = await sendRequest(
+                        'http://localhost:3000/updateDiscussionRoomStatus',
+                        'PUT',
+                        { status, room_id }
+                    );
+
+                    if (updateDiscussionRoomStatusResponse?.updatedRows > 0) {
+                        appendOutput('Discussion room status updated successfully.');
+                    } else {
+                        appendOutput('Failed to update discussion room status.');
+                    }
+                } catch (error) {
+                    console.error('Error in update_discussion_room_status:', error);
+                    appendOutput('An unexpected error occurred while updating the discussion room status.');
+                }
+                break;
+
+            case 'update_seats_status':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
+                if (commandParts.length !== 3) {
+                    appendOutput('Usage: update_seats_status [status] [seat_id]');
+                    break;
+                }
+
+                status = commandParts[1];
+                seat_id = commandParts[2];
+
+                try {
+                    const updateSeatsStatusResponse = await sendRequest(
+                        'http://localhost:3000/updateSeatsStatus',
+                        'PUT',
+                        { status, seat_id }
+                    );
+
+                    if (updateSeatsStatusResponse?.updatedRows > 0) {
+                        appendOutput('Seat status updated successfully.');
+                    } else {
+                        appendOutput('Failed to update seat status.');
+                    }
+                } catch (error) {
+                    console.error('Error in update_seats_status:', error);
+                    appendOutput('An unexpected error occurred while updating the seat status.');
+                }
+                break;
 
             default:
                 appendOutput('Unknown command. Type an action to perform.');
@@ -543,6 +1643,16 @@
         }
     });
     showActions();
+
+    // Function to get user input
+    async function getInput(prompt = 'Enter books for the fair in the following format:\n' +
+    'Title, book_id\n' +
+    'Type "done" when you are finished entering books.') {
+        return new Promise(resolve => {
+            const input = window.prompt(prompt);
+            resolve(input.trim());
+        });
+    }
 </script>
 
 </body>

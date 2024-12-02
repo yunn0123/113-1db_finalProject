@@ -611,7 +611,7 @@ app.post('/newBookAcq', async (req, res) => {
       const result = await newBookAcq(a_date, status, isbn, cost, supplier);
       res.status(200).json({ message: '採買新增成功', updatedRows: res.rowCount });
   } catch (err) {
-      res.status(200).json({ message: '採買新增成功', updatedRows: rowCount });
+      res.status(200).json({ message: '採買新增成功', updatedRows: res.rowCount });
   }
 });
 

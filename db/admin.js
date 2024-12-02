@@ -7,7 +7,7 @@ const queries = {
     newAV: 'INSERT INTO av_material (title, isan, status, p_year, duration) VALUES ($1, $2, $3, $4, $5) RETURNING av_id',
     // add author (新增書籍時自動加入)
     newBookAuthor: 'INSERT INTO book_authors (book_id, author) VALUES ($1, $2)',
-    newAVAuthor: 'INSERT INTO av_authors (av_id, author) VALUES ($1, $2)',    
+    newAVAuthor: 'INSERT INTO av_authors (av_id, author) VALUES ($1, $2)',
     // 新增採買
     newBookAcq: "INSERT INTO book_acq (library_id, a_date, status, isbn, cost, supplier) VALUES ('L001', $1, $2, $3, $4, $5)",
     newAVAcq: "INSERT INTO av_acq (library_id, a_date, status, isan, cost, supplier) VALUES ('L001', $1, $2, $3, $4, $5)",
@@ -25,7 +25,7 @@ const queries = {
     returnAV: "UPDATE av_loan SET r_date = CURRENT_DATE WHERE av_id = $1 and u_id = $2 RETURNING esti_r_date, r_date",
     // 自動更新借閱狀態(for 逾期未歸還)
     updateOverdueBookLoan: "UPDATE book_loan SET status = '逾期未歸還' WHERE r_date IS NULL AND status = '未歸還' AND esti_r_date < CURRENT_DATE ",
-    updateOverdueAVLoan: "UPDATE av_loan SET status = '逾期未歸還' WHERE r_date IS NULL AND status = '未歸還' AND esti_r_date < CURRENT_DATE ", 
+    updateOverdueAVLoan: "UPDATE av_loan SET status = '逾期未歸還' WHERE r_date IS NULL AND status = '未歸還' AND esti_r_date < CURRENT_DATE ",
     // 評分
     ratingBook: "UPDATE book_loan SET rating = $1 WHERE book_id = $2 and u_id = $3",
     ratingAV: "UPDATE av_loan SET rating = $1 WHERE av_id = $2 and u_id = $3",
@@ -34,21 +34,21 @@ const queries = {
     getAVLoansByUser: "SELECT * FROM av_loan WHERE u_id = $1",
     // 查詢某時間段借閱紀錄
     getBookByTime: "SELECT * FROM book_loan WHERE l_date BETWEEN $1 AND $2",
-    getAVByTime: "SELECT * FROM av_loan WHERE l_date BETWEEN $1 AND $2", 
+    getAVByTime: "SELECT * FROM av_loan WHERE l_date BETWEEN $1 AND $2",
     // 查詢借閱狀態
     getBookByStatus: "SELECT * FROM book_loan WHERE status = $1",
-    getAVByStatus: "SELECT * FROM av_loan WHERE status = $1", 
+    getAVByStatus: "SELECT * FROM av_loan WHERE status = $1",
     // 討論室
     getFixingDiscussionRoom: "SELECT * FROM discussion_room WHERE status = '維修中'",
     getFixingSeats: "SELECT * FROM seats WHERE status = '維修中'",
-    updateDiscussionRoomStatus: "UPDATE discussion_room SET status = $1 WHERE room_id = $2",
+    updateDiscussionRoomStatus: "UPDATE discussion_room SET status = $1 WHERE dr_id = $2",
     updateSeatsStatus: "UPDATE seats SET status = $1 WHERE seat_id = $2",
     // updateStudyRoomStatus: "UPDATE study_room SET status = $1 WHERE room_id = $2",
     // 書展
-    newFair: "INSERT INTO fair (name, s_date, e_date, library_id) VALUES ($1, $2, $3, 'L001') RETURNING fair_id",
-    newFairBook: "INSERT INTO fair_books (fair_id, book_id) VALUES ($1, $2)",
-    updateFairStartDate: "UPDATE fair SET s_date = $1 WHERE fair_id = $2",
-    updateFairEndDate: "UPDATE fair SET e_date = $1 WHERE fair_id = $2",
+    newFair: "INSERT INTO book_fair (name, s_date, e_date, library_id) VALUES ($1, $2, $3, 'L001') RETURNING fair_id",
+    newFairBook: "INSERT INTO book_fair_books (name, book_id) VALUES ($1, $2)",
+    updateFairStartDate: "UPDATE book_fair SET s_date = $1 WHERE fair_id = $2",
+    updateFairEndDate: "UPDATE book_fair SET e_date = $1 WHERE fair_id = $2",
 }
 const newFair = async (name, s_date, e_date, books) => {
     try{
@@ -252,7 +252,7 @@ const updateOverdueAVLoan = async (status, av_id, u_id) => {
     }
 };
 
-// WHERE book_id and u_id 
+// WHERE book_id and u_id
 const returnBook = async (book_id, u_id) => {
     try{
         await db.query('BEGIN');
@@ -269,7 +269,7 @@ const returnBook = async (book_id, u_id) => {
             const updateRes = await db.query("UPDATE book_loan SET status = $1 WHERE book_id = $2 AND u_id = $3", [status, book_id, u_id]);
             console.log('歸還書籍成功，狀態為已歸還');
         }
-        console.log('歸還書籍成功'); 
+        console.log('歸還書籍成功');
         await db.query('COMMIT');
     } catch (error) {
         await db.query('ROLLBACK'); // 發生錯誤時回滾
@@ -294,7 +294,7 @@ const returnAV = async (av_id, u_id) => {
             const updateRes = await db.query("UPDATE av_loan SET status = $1 WHERE av_id = $2 AND u_id = $3", [status, av_id, u_id]);
             console.log('歸還影音成功，狀態為已歸還');
         }
-        console.log('歸還影音成功'); 
+        console.log('歸還影音成功');
         await db.query('COMMIT');
     } catch (error) {
         await db.query('ROLLBACK'); // 發生錯誤時回滾
