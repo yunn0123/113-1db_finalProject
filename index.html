@@ -61,35 +61,35 @@
                 actions += `<div>11. logout</div>`;
             } else if (loggedInUser.role === "admin") {
                 actions += `<div>1. new_fair [Fair Name] [Start Date] [End Date]</div>`;
-                actions += `<div>1. new_book [title] [isbn] [edition] [publish_year] [genre] [status] [author]</div>`;
-                actions += `<div>1. new_av [title] [isan] [status] [publishYear] [duration] [author]</div>`;
-                actions += `<div>1. new_book_acq [acquisitionDate] [status] [isbn] [cost] [supplier]</div>`;
-                actions += `<div>1. new_av_acq [acquisitionDate] [status] [isan] [cost] [supplier]</div>`;
-                actions += `<div>1. update_book [title] [isbn] [edition] [publishYear] [genre] [bookID]</div>`;
-                actions += `<div>1. update_av [title] [isan] [publishYear] [duration] [avID]</div>`;
-                actions += `<div>1. delete_book [bookID]</div>`;
-                actions += `<div>1. delete_av [avID]</div>`;
-                actions += `<div>1. update_book_status [status] [bookID]</div>`;
-                actions += `<div>1. update_av_status [status] [avID]</div>`;
-                actions += `<div>1. return_book [bookID]</div>`;
-                actions += `<div>1. return_av [avID]</div>`;
-                actions += `<div>1. update_overdue_book_loans</div>`;
-                actions += `<div>1. update_overdue_av_loans</div>`;
-                actions += `<div>1. rating_book [rating] [book_id] [user_id]</div>`;
-                actions += `<div>1. rating_av [rating] [av_id] [user_id]</div>`;
-                actions += `<div>1. update_fair_start_date [fair_id] [start_date]</div>`;
-                actions += `<div>2. update_fair_end_date [fair_id] [end_date]</div>`;
-                actions += `<div>3. get_book_loans_by_user [user_id]</div>`;
-                actions += `<div>4. get_av_loans_by_user [user_id]</div>`;
-                actions += `<div>5. get_books_by_time [start_date] [end_date]</div>`;
-                actions += `<div>6. get_av_by_time [start_date] [end_date]</div>`;
-                actions += `<div>7. get_books_by_status [status]</div>`;
-                actions += `<div>8. get_av_by_status [status]</div>`;
-                actions += `<div>9. get_fixing_discussion_room</div>`;
-                actions += `<div>10. get_fixing_seats</div>`;
-                actions += `<div>11. update_discussion_room_status [status] [room_id]</div>`;
-                actions += `<div>12. update_seat_status [status] [seat_id]</div>`;
-                actions += `<div>13. logout</div>`;
+                actions += `<div>2. new_book [title] [isbn] [edition] [publish_year] [genre] [status] [author]</div>`;
+                actions += `<div>3. new_av [title] [isan] [status] [publishYear] [duration] [author]</div>`;
+                actions += `<div>4. new_book_acq [acquisitionDate] [status] [isbn] [cost] [supplier]</div>`;
+                actions += `<div>5. new_av_acq [acquisitionDate] [status] [isan] [cost] [supplier]</div>`;
+                actions += `<div>6. update_book [title] [isbn] [edition] [publishYear] [genre] [bookID]</div>`;
+                actions += `<div>7. update_av [title] [isan] [publishYear] [duration] [avID]</div>`;
+                actions += `<div>8. delete_book [bookID]</div>`;
+                actions += `<div>9. delete_av [avID]</div>`;
+                actions += `<div>10. update_book_status [status] [bookID]</div>`;
+                actions += `<div>11. update_av_status [status] [avID]</div>`;
+                actions += `<div>12. return_book [bookID]</div>`;
+                actions += `<div>13. return_av [avID]</div>`;
+                actions += `<div>14. update_overdue_book_loans</div>`;
+                actions += `<div>15. update_overdue_av_loans</div>`;
+                actions += `<div>16. rating_book [rating] [book_id] [user_id]</div>`;
+                actions += `<div>17. rating_av [rating] [av_id] [user_id]</div>`;
+                actions += `<div>18. update_fair_start_date [fair_id] [start_date]</div>`;
+                actions += `<div>19. update_fair_end_date [fair_id] [end_date]</div>`;
+                actions += `<div>20. get_book_loans_by_user [user_id]</div>`;
+                actions += `<div>21. get_av_loans_by_user [user_id]</div>`;
+                actions += `<div>22. get_books_by_time [start_date] [end_date]</div>`;
+                actions += `<div>23. get_av_by_time [start_date] [end_date]</div>`;
+                actions += `<div>24. get_books_by_status [status]</div>`;
+                actions += `<div>25. get_av_by_status [status]</div>`;
+                actions += `<div>26. get_fixing_discussion_room</div>`;
+                actions += `<div>27. get_fixing_seats</div>`;
+                actions += `<div>28. update_discussion_room_status [status] [room_id]</div>`;
+                actions += `<div>29. update_seat_status [status] [seat_id]</div>`;
+                actions += `<div>30. logout</div>`;
             }
             appendOutput(actions, true);
         }, 500);
@@ -332,11 +332,11 @@
                     break;
                 }
 
-                const drId = commandParts[1];
+                drId = commandParts[1];
 
                 // Extract start and end date-time inputs
-                const startTime = `${commandParts[2]} ${commandParts[3]}`;
-                const endTime = `${commandParts[4]} ${commandParts[5]}`;
+                startTime = `${commandParts[2]} ${commandParts[3]}`;
+                endTime = `${commandParts[4]} ${commandParts[5]}`;
 
                 // Check if date-time inputs are valid
                 if (isNaN(Date.parse(startTime)) || isNaN(Date.parse(endTime))) {
@@ -421,6 +421,48 @@
                     appendOutput('An unexpected error occurred while fetching seat information.');
                 }
                 break;
+
+            case 'reserve_study_room':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+                if (commandParts.length < 6) {
+                    appendOutput('Usage: reserve_study_room [srId] [seatId] [startTime] [endTime]');
+                    break;
+                }
+
+                srId = commandParts[1];
+                seatId = commandParts[2];
+                startTime = `${commandParts[3]} ${commandParts[4]}`;
+                endTime = `${commandParts[5]} ${commandParts[6]}`;
+
+                // Check if date-time inputs are valid
+                if (isNaN(Date.parse(startTime)) || isNaN(Date.parse(endTime))) {
+                    appendOutput(`${commandParts[4]} ${commandParts[5]}`);
+                    appendOutput('Invalid date-time format. Use: YYYY-MM-DD HH:MM');
+                    break;
+                }
+
+                try {
+                    const reserveResponse = await sendRequest(
+                        'http://localhost:3000/study_rooms/reserve',
+                        'POST',
+                        { srId, userId: loggedInUser.id, seatId, startTime, endTime }
+                    );
+
+                    if (reserveResponse?.reservation) {
+                        appendOutput(reserveResponse.message);
+                        appendOutput(`Reservation Details: ID=${reserveResponse.reservation.sr_id}, Start=${reserveResponse.reservation.s_time}, End=${reserveResponse.reservation.e_time}`);
+                    } else {
+                        appendOutput(reserveResponse?.error || 'Failed to reserve study room.');
+                    }
+                } catch (error) {
+                    console.error('Error in reserve_study_rooms:', error);
+                    appendOutput('An unexpected error occurred while reserving the study room.');
+                }
+                break;
+
             case 'submit_wishlist':
                 if (!loggedInUser) {
                     appendOutput('Please login first.');

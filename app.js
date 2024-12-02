@@ -1,6 +1,6 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const pool = require("/Users/alexei/Desktop/NTUFiles/Library Information Systems/midterm/113-1db_finalProject/db/db.js");
+const pool = require("./db.js");
 const { 
   newBook, // 新增書籍
   newFair, // 新增書展
@@ -354,9 +354,9 @@ app.get("/study-rooms/:id/seats", async (req, res) => {
 });
 
 // 申請自習室並更新座位狀態
-app.post("/study-rooms/reserve", async (req, res) => {
+app.post("/study_rooms/reserve", async (req, res) => {
   const { srId, userId, seatId, startTime, endTime } = req.body;
-
+  console.log(endTime);
   // 檢查必填字段
   if (!srId || !userId || !seatId || !startTime || !endTime) {
     return res.status(400).json({ error: "Missing required fields" });
