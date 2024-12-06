@@ -824,7 +824,7 @@
                 try {
                     const updateBookResponse = await sendRequest(
                         'http://localhost:3000/updateBook',
-                        'POST',
+                        'PUT',
                         { title, isbn, edition, p_year: publishYear, genre, book_id: bookID },
                     );
 
@@ -929,7 +929,7 @@
                     break;
                 }
 
-                avID = commandParts[1];
+                const avID = commandParts.slice(1).join(' ');
 
                 try {
                     const deleteAVResponse = await sendRequest(
@@ -1030,6 +1030,11 @@
                     break;
                 }
 
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
+                    break;
+                }
+
                 if (commandParts.length !== 2) {
                     appendOutput('Usage: return_book [bookID]');
                     break;
@@ -1062,16 +1067,21 @@
                     break;
                 }
 
-                if (commandParts.length !== 2) {
-                    appendOutput('Usage: return_av [avID]');
+                if (loggedInUser.role !== 'admin') {
+                    appendOutput('Unauthorized action.');
                     break;
                 }
 
-                returnAVID = commandParts[1];
+                // if (commandParts.length !== 2) {
+                //     appendOutput('Usage: return_av [avID]');
+                //     break;
+                // }
 
+                returnAVID = commandParts.slice(1).join(' ');
+                appendOutput(returnAVID);
                 try {
                     const returnAVResponse = await sendRequest(
-                        'http://localhost:3000/returnAV',
+                        'http://localhost:3000/returnAv',
                         'PUT',
                         { av_id: returnAVID, u_id: loggedInUser.id },
                     );
@@ -1186,14 +1196,14 @@
                     break;
                 }
 
-                if (commandParts.length !== 4) {
-                    appendOutput('Usage: rating_av [rating] [av_id] [user_id]');
-                    break;
-                }
+                // if (commandParts.length !== 4) {
+                //     appendOutput('Usage: rating_av [rating] [av_id] [user_id]');
+                //     break;
+                // }
 
                 avRating = commandParts[1];
-                avId = commandParts[2];
-                avUserId = commandParts[3];
+                avUserId = commandParts[commandParts.length - 1];
+                avId = commandParts.slice(2, commandParts.length - 1).join(' ');
 
                 try {
                     const ratingAVResponse = await sendRequest(
@@ -1237,7 +1247,7 @@
                     const updateFairStartDateResponse = await sendRequest(
                         'http://localhost:3000/updateFairStartDate',
                         'PUT',
-                        { fair_id: fairId, s_date: startDate }
+                        { s_date: startDate, fair_id: fairId }
                     );
 
                     if (updateFairStartDateResponse?.message) {
@@ -1317,7 +1327,7 @@
                     if (getBookLoansResponse?.length > 0) {
                         appendOutput('Book loan records for user:');
                         getBookLoansResponse.forEach(loan => {
-                            appendOutput(`Book ID: ${loan.book_id}, Loan Date: ${loan.loan_date}, Due Date: ${loan.due_date}`);
+                            appendOutput(`Book ID: ${loan.book_id}, Loan Date: ${loan.l_date}, Due Date: ${loan.r_date}, Status: ${loan.status}`);
                         });
                     } else {
                         appendOutput('No book loans found for this user.');
@@ -1355,7 +1365,7 @@
                     if (getAVLoansResponse?.length > 0) {
                         appendOutput('AV loan records for user:');
                         getAVLoansResponse.forEach(loan => {
-                            appendOutput(`AV ID: ${loan.av_id}, Loan Date: ${loan.loan_date}, Due Date: ${loan.due_date}`);
+                            appendOutput(`AV ID: ${loan.av_id}, Loan Date: ${loan.l_date}, Due Date: ${loan.r_date}, Status: ${loan.status}`);
                         });
                     } else {
                         appendOutput('No AV loans found for this user.');
@@ -1383,11 +1393,12 @@
                 }
 
                 startDate = commandParts[1];
+                appendOutput(`Start_date: ${startDate}`);
                 endDate = commandParts[2];
 
                 try {
                     const getBooksByTimeResponse = await sendRequest(
-                        `http://localhost:3000/getBookByTime?start_date=${startDate}&end_date=${endDate}`,
+                        `http://localhost:3000/getBookByTime?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`,
                         'GET'
                     );
 
@@ -1404,6 +1415,7 @@
                     appendOutput('An unexpected error occurred while fetching books.');
                 }
                 break;
+
 
             case 'get_av_by_time':
                 if (!loggedInUser) {
@@ -1426,7 +1438,7 @@
 
                 try {
                     const getAVByTimeResponse = await sendRequest(
-                        `http://localhost:3000/getAVByTime?start_date=${avStartDate}&end_date=${avEndDate}`,
+                        `http://localhost:3000/getAVByTime?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`,
                         'GET'
                     );
 
@@ -1540,7 +1552,7 @@
                     if (getFixingDiscussionRoomResponse?.length > 0) {
                         appendOutput('Fixing Discussion Rooms:');
                         getFixingDiscussionRoomResponse.forEach(room => {
-                            appendOutput(`Room ID: ${room.room_id}, Room Name: ${room.room_name}, Status: ${room.status}`);
+                            appendOutput(`Room ID: ${room.dr_id}, Library ID: ${room.library_id}, Status: ${room.status}`);
                         });
                     } else {
                         appendOutput('No fixing discussion rooms found.');
@@ -1571,7 +1583,7 @@
                     if (getFixingSeatsResponse?.length > 0) {
                         appendOutput('Fixing Seats:');
                         getFixingSeatsResponse.forEach(seat => {
-                            appendOutput(`Seat ID: ${seat.seat_id}, Seat Name: ${seat.seat_name}, Status: ${seat.status}`);
+                            appendOutput(`Seat ID: ${seat.seat_id}, Study Room ID: ${seat.sr_id}, Status: ${seat.status}`);
                         });
                     } else {
                         appendOutput('No fixing seats found.');
@@ -1608,7 +1620,7 @@
                         { status, room_id }
                     );
 
-                    if (updateDiscussionRoomStatusResponse?.updatedRows > 0) {
+                    if (updateDiscussionRoomStatusResponse) {
                         appendOutput('Discussion room status updated successfully.');
                     } else {
                         appendOutput('Failed to update discussion room status.');
@@ -1619,7 +1631,7 @@
                 }
                 break;
 
-            case 'update_seats_status':
+            case 'update_seat_status':
                 if (!loggedInUser) {
                     appendOutput('Please login first.');
                     break;
@@ -1645,7 +1657,7 @@
                         { status, seat_id }
                     );
 
-                    if (updateSeatsStatusResponse?.updatedRows > 0) {
+                    if (updateSeatsStatusResponse) {
                         appendOutput('Seat status updated successfully.');
                     } else {
                         appendOutput('Failed to update seat status.');

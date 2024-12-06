@@ -97,7 +97,7 @@ const newBook = async (title, isbn, edition, p_year, genre, status, author) => {
     }
 };
 
-const newAV = async (title, isan, status, p_year, duration) => {
+const newAV = async (title, isan, status, p_year, duration, author) => {
     try{
         await db.query('BEGIN');
         const res = await db.query(queries.newAV, [title, isan, status, p_year, duration]);
@@ -226,10 +226,10 @@ const deleteAV = async (av_id) => {
 };
 
 // WHERE book_id and u_id, status 自動更新逾期未歸還
-const updateOverdueBookLoan = async (status, book_id, u_id) => {
+const updateOverdueBookLoan = async () => {
     try{
         await db.query('BEGIN');
-        const res = await db.query(queries.updateOverdueBookLoan, [status, book_id, u_id]);
+        const res = await db.query(queries.updateOverdueBookLoan);
         console.log('更新書籍逾期紀錄成功');
         await db.query('COMMIT');
     } catch (error) {
@@ -239,10 +239,10 @@ const updateOverdueBookLoan = async (status, book_id, u_id) => {
     }
 };
 // WHERE av_id and u_id, status 自動更新逾期未歸還
-const updateOverdueAVLoan = async (status, av_id, u_id) => {
+const updateOverdueAVLoan = async () => {
     try{
         await db.query('BEGIN');
-        const res = await db.query(queries.updateOverdueAVLoan, [status, av_id, u_id]);
+        const res = await db.query(queries.updateOverdueAVLoan);
         console.log('更新影音逾期紀錄成功');
         await db.query('COMMIT');
     } catch (error) {
@@ -283,6 +283,7 @@ const returnAV = async (av_id, u_id) => {
         await db.query('BEGIN');
         const res = await db.query(queries.returnAV, [av_id, u_id]);
         const esti_r_date = res.rows[0].esti_r_date;
+        console.log(esti_r_date);
         const r_date = res.rows[0].r_date;
         if (new Date(r_date) > new Date(esti_r_date)) {
             let status = '逾期歸還';
@@ -331,16 +332,16 @@ const ratingAV = async (rating, av_id, u_id) => {
 };
 
 // 更新書展開始日期
-const updateFairStartDate = async (s_date, fair_id) => {
+const updateFairStartDate = async (fair_id, s_date) => {
     try{
         await db.query('BEGIN');
-        const res = await db.query(queries.updateFairEndDate, [e_date, fair_id]);
-        console.log('更新書展結束日期成功');
+        const res = await db.query(queries.updateFairEndDate, [s_date, fair_id]);
+        console.log('更新書展起始日期成功');
         await db.query('COMMIT');
         return res.rowCount;
     } catch (error) {
         await db.query('ROLLBACK'); // 發生錯誤時回滾
-        console.error('更新書展結束日期失敗:', error.message);
+        console.error('更新書展起始日期失敗:', error.message);
         throw error; // 將錯誤拋出以供上層處理
     }
 };
@@ -393,6 +394,7 @@ const getBookByTime = async (start, end) => {
     try{
         await db.query('BEGIN');
         const res = await db.query(queries.getBookByTime, [start, end]);
+        console.log(start);
         console.log('查詢書籍借閱紀錄成功');
         await db.query('COMMIT');
         return res.rows;

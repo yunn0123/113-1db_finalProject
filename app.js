@@ -1,6 +1,6 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const pool = require("./db.js");
+const pool = require("./db/db.js");
 const { 
   newBook, // 新增書籍
   newFair, // 新增書展
@@ -140,7 +140,7 @@ app.post("/books/borrow", async (req, res) => {
 
     // 在 book_loan 表中新增借閱記錄
     const loanResult = await pool.query(
-      "INSERT INTO book_loan (u_id, book_id, l_date, status) VALUES ($1, $2, CURRENT_DATE, $3) RETURNING *",
+      "INSERT INTO book_loan (u_id, book_id, l_date, esti_r_date, status) VALUES ($1, $2, CURRENT_DATE, CURRENT_DATE + INTERVAL '7 days' , $3) RETURNING *",
       [userId, bookId, "未歸還"]
     );
 
@@ -595,14 +595,15 @@ app.post('/newBook', async (req, res) => {
 
 // 新增AV，順便傳入作者
 app.post('/newAV', async (req, res) => {
-  try{
-      const { title, isan, status, p_year, duration, author } = req.body;
-      const result = await newAV(title, isan, status, p_year, duration, author);
-      res.status(200).json({ message: '新增影音成功', updatedRows: res.rowCount });
-  } catch (err) {
-      res.status(500).json({ error: '新增影音失敗', details: err.message });
-  }
+    try {
+        const { title, isan, status, p_year, duration, author } = req.body;
+        const result = await newAV(title, isan, status, p_year, duration, author);
+        res.status(200).json({ message: '新增影音成功', updatedRows: result.rowCount });
+    } catch (err) {
+        res.status(500).json({ error: '新增影音失敗', details: err.message });
+    }
 });
+
 
 // 新增採買
 app.post('/newBookAcq', async (req, res) => {
