@@ -105,7 +105,7 @@ app.get("/books/search", async (req, res) => {
 
   try {
     const result = await pool.query(
-      'SELECT * FROM books WHERE "title" ILIKE $1',
+      'SELECT * FROM books WHERE title ILIKE $1',
       [`%${title}%`]
     );
     res.json(result.rows);
@@ -204,7 +204,7 @@ app.get('/av/search', async (req, res) => {
     const values = [];
 
     if (title) {
-      query += ' AND "Title" ILIKE $1';
+      query += ' AND title ILIKE $1';
       values.push(`%${title}%`);
     }
 
