@@ -1,6 +1,6 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const pool = require("./db/db.js");
+const pool = require("./db.js");
 const { 
   newBook, // 新增書籍
   newFair, // 新增書展
