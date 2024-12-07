@@ -33,8 +33,8 @@ const queries = {
     getBookLoansByUser: "SELECT * FROM book_loan WHERE u_id = $1 ORDER BY l_date DESC",
     getAVLoansByUser: "SELECT * FROM av_loan WHERE u_id = $1",
     // 查詢某時間段借閱紀錄
-    getBookByTime: "SELECT * FROM book_loan WHERE l_date BETWEEN $1 AND $2",
-    getAVByTime: "SELECT * FROM av_loan WHERE l_date BETWEEN $1 AND $2",
+    getBookByTime: "SELECT * FROM book_loan WHERE l_date BETWEEN $1 AND $2 LIMIT 100",
+    getAVByTime: "SELECT * FROM av_loan WHERE l_date BETWEEN $1 AND $2 LIMIT 100",
     // 查詢借閱狀態
     getBookByStatus: "SELECT * FROM book_loan WHERE status = $1",
     getAVByStatus: "SELECT * FROM av_loan WHERE status = $1",
@@ -394,7 +394,7 @@ const getBookByTime = async (start, end) => {
     try{
         await db.query('BEGIN');
         const res = await db.query(queries.getBookByTime, [start, end]);
-        console.log(start);
+        console.log(start, end);
         console.log('查詢書籍借閱紀錄成功');
         await db.query('COMMIT');
         return res.rows;
