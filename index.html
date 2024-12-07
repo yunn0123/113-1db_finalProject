@@ -58,6 +58,8 @@
                 actions += `<div>10. view_wishlist</div>`;
                 actions += `<div>11. search_active_fairs</div>`;
                 actions += `</div>12. search_fair_books [fairName]</div>`;
+                actions += `<div>13. rating_book [rating] [book_id] [user_id]</div>`;
+                actions += `<div>14. rating_av [rating] [av_id] [user_id]</div>`;
                 actions += `<div>11. logout</div>`;
             } else if (loggedInUser.role === "admin") {
                 actions += `<div>1. new_fair [Fair Name] [Start Date] [End Date]</div>`;
@@ -75,8 +77,6 @@
                 actions += `<div>13. return_av [avID]</div>`;
                 actions += `<div>14. update_overdue_book_loans</div>`;
                 actions += `<div>15. update_overdue_av_loans</div>`;
-                actions += `<div>16. rating_book [rating] [book_id] [user_id]</div>`;
-                actions += `<div>17. rating_av [rating] [av_id] [user_id]</div>`;
                 actions += `<div>18. update_fair_start_date [fair_id] [start_date]</div>`;
                 actions += `<div>19. update_fair_end_date [fair_id] [end_date]</div>`;
                 actions += `<div>20. get_book_loans_by_user [user_id]</div>`;
@@ -223,28 +223,44 @@
                 }
                 break;
 
-            // case 'search_books':
-            //     if (!loggedInUser) {
-            //         appendOutput('Please login first.');
-            //         break;
-            //     }
-            //     const keyword = commandParts.slice(1).join(' ');
-            //     if (keyword.length === 13) {
-            //         const searchResults = await fetch('http://localhost:3000/books', {
-            //             method: 'POST',
-            //             headers: { 'Content-Type': 'application/json' },
-            //             body: JSON.stringify({ isbn }),
-            //         }).then(res => res.json());
-            //     }
-            //     if (searchResults?.length === 0) {
-            //         appendOutput('No books found matching your search.');
-            //     } else {
-            //         appendOutput('Search results:');
-            //         searchResults.forEach(book => {
-            //             appendOutput(`ID: ${book.id}, Title: ${book.title}, Author: ${book.author}`);
-            //         });
-            //     }
-            //     break;
+            case 'search_books_isbn':
+                if (!loggedInUser) {
+                    appendOutput('Please login first.');
+                    break;
+                }
+
+                isbn = commandParts.slice(1).join(' ').trim();
+
+                if (isbn.length !== 13) {
+                    appendOutput('Invalid ISBN. Please enter a 13-character ISBN.');
+                    break;
+                }
+
+                try {
+                    const response = await fetch(`http://localhost:3000/books?isbn=${encodeURIComponent(isbn)}`, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    if (!response.ok) {
+                        appendOutput('An error occurred while searching for books.');
+                        break;
+                    }
+
+                    const isbnSearchResults = await response.json();
+
+                    if (isbnSearchResults.length === 0) {
+                        appendOutput('No books found matching your search.');
+                    } else {
+                        appendOutput('Search results:');
+                        isbnSearchResults.forEach(book => {
+                            appendOutput(`ID: ${book.book_id}, Title: ${book.title}, ISBN: ${book.isbn}, Edition: ${book.edition}, Publish Year: ${book.p_year}, Genre: ${book.Genre}, Status: ${book.status}`);
+                        });
+                    }
+                } catch (err) {
+                    appendOutput(`An error occurred: ${err.message}`);
+                }
+                break;
 
             case 'borrow_books':
                 if (!loggedInUser) {
@@ -1405,7 +1421,7 @@
                     if (getBooksByTimeResponse?.length > 0) {
                         appendOutput('Books between the specified dates:');
                         getBooksByTimeResponse.forEach(book => {
-                            appendOutput(`Book ID: ${book.book_id}, Title: ${book.title}, Date Added: ${book.date_added}`);
+                            appendOutput(`Book ID: ${book.book_id}, Date Added: ${book.l.date}`);
                         });
                     } else {
                         appendOutput('No books found within this date range.');
