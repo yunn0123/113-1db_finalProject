@@ -24,8 +24,9 @@
    npm install
    ```
 4. 本地端資料庫匯入：
-   請至psql (pgadmin4)中匯入`dataset.backup`檔案並啟動postgresql
    
+   - 請至psql (pgadmin4)中匯入`dataset.backup`檔案並啟動postgresql
+   - 並至`db.js`確認您的連線資訊是否需要做修改
 
 ## 執行
 
